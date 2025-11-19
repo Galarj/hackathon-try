@@ -2,10 +2,9 @@
 
 ## 🎯 Project Overview
 
-**TruthChain PH** is a Filipino-friendly AI-powered web application ecosystem that combines two powerful tools:
+**TruthChain PH** is a Filipino-friendly AI-powered web application that provides a powerful tool:
 
-1. **Fake News Detector** - Verifies text, images, and videos for authenticity using AI
-2. **GovGuide AI Video Generator** - Creates step-by-step explainer videos for Philippine government processes
+1. **Fake News Detector** - Verifies text articles for authenticity using AI
 
 **Technology Stack:**
 - Frontend: HTML5, CSS3, Vanilla JavaScript
@@ -73,7 +72,7 @@ npx http-server -p 8080
 - **File:** `index.html`, `styles.css`
 - Complete responsive design (desktop + mobile)
 - Filipino-friendly interface (Tagalog/Taglish)
-- Modular sections: Home, Fake News Detector, GovGuide AI
+- Modular sections: Home, Fake News Detector
 - Modals: Onboarding, Error, Success
 - Loading states and animations
 - Mobile-first responsive design
@@ -81,8 +80,7 @@ npx http-server -p 8080
 ### Layer 2: App Logic (Vanilla JS)
 - **File:** `app.js`
 - Complete user interaction handling
-- State management (onboarding, verification, video generation)
-- File upload with drag-and-drop
+- State management (onboarding, verification)
 - API integration with backend
 - Real-time stats updates
 - Recent activity tracking
@@ -92,10 +90,8 @@ npx http-server -p 8080
 - **File:** `server.js`
 - RESTful API endpoints:
   - `POST /api/verify` - Fake news verification
-  - `POST /api/generate-video` - Video generation
   - `GET /api/stats` - Application statistics
   - `GET /api/recent-activity` - Recent user activity
-- File upload handling (multer)
 - CORS support
 - Error handling middleware
 - AI integration stubs (ready for Alibaba Cloud Qwen)
@@ -105,8 +101,6 @@ npx http-server -p 8080
 - Complete JSON schemas:
   - `VerificationSubmission` - User submission data
   - `VerificationResult` - AI verification output
-  - `VideoGenerationRequest` - Video generation request
-  - `GeneratedVideo` - Generated video metadata
   - `UserActivity` - Activity tracking
   - `ApplicationStats` - App statistics
 - Input/output specifications for all API endpoints
@@ -115,9 +109,6 @@ npx http-server -p 8080
 - **File:** `AI-PROMPTS.md`
 - System prompts for AI models:
   - Text verification
-  - Image analysis
-  - Video deepfake detection
-  - Video script generation
 - User prompt templates
 - AI-to-AI handoff workflows (multi-agent)
 - Example complete workflows
@@ -128,8 +119,7 @@ npx http-server -p 8080
 - Detailed step-by-step flows:
   - Onboarding journey
   - Home dashboard interactions
-  - Fake news verification (text/image/video)
-  - GovGuide video generation
+  - Fake news verification (text)
   - Navigation flows
   - Error handling states
   - Success states
@@ -145,7 +135,6 @@ npx http-server -p 8080
   - OSS for object storage
   - RDS for database
   - Qwen AI for verification
-  - Video Generation API
   - CloudMonitor for logging
 - Deployment workflow
 - Cost estimation
@@ -164,20 +153,6 @@ npx http-server -p 8080
    - Optional source URL
    - AI analyzes for fake news patterns
 
-2. **Image Verification**
-   - Upload images (PNG, JPG, JPEG)
-   - Max size: 10MB
-   - Detects photo manipulation
-   - Reverse image search
-   - Context verification
-
-3. **Video Verification**
-   - Upload videos (MP4, AVI, MOV)
-   - Max size: 50MB
-   - Deepfake detection
-   - Audio-video sync analysis
-   - Timeline verification
-
 **Output:**
 - Status: VERIFIED, FAKE, or UNVERIFIED
 - Confidence Score: 0-100%
@@ -186,32 +161,7 @@ npx http-server -p 8080
 - Credible sources cited
 - Timestamp
 
-### GovGuide AI Video Generator
-
-**Supported Government Processes:**
-1. Passport Application (DFA)
-2. Driver's License (LTO)
-3. NBI Clearance
-4. BIR Registration
-5. SSS Registration
-6. PhilHealth Registration
-7. Pag-IBIG Registration
-8. Business Permit
-
-**Customization Options:**
-- **Language:** Tagalog, Taglish, English
-- **Detail Level:** Basic, Detailed, Comprehensive
-- **Voice Style:** Friendly, Professional, Enthusiastic
-
-**Output:**
-- AI-generated explainer video
-- Step-by-step breakdown
-- Required documents list
-- Fee breakdown
-- Processing timeline
-- Tips and reminders
-- Downloadable MP4 video
-- Shareable link
+*(GovGuide AI Video Generator has been removed from the application)*
 
 ---
 
@@ -220,13 +170,13 @@ npx http-server -p 8080
 ### 1. Verify Content
 ```http
 POST /api/verify
-Content-Type: multipart/form-data
+Content-Type: application/json
 
-FormData:
-  type: "text" | "image" | "video"
-  content: string (if type=text)
-  file: File (if type=image/video)
-  sourceUrl: string (optional)
+{
+  "type": "text",
+  "content": "string",
+  "sourceUrl": "string (optional)"
+}
 
 Response:
 {
@@ -245,30 +195,7 @@ Response:
 ```
 
 ### 2. Generate Video
-```http
-POST /api/generate-video
-Content-Type: application/json
-
-{
-  "processId": "passport",
-  "language": "tagalog",
-  "detailLevel": "detailed",
-  "voiceStyle": "friendly"
-}
-
-Response:
-{
-  "success": true,
-  "result": {
-    "videoId": "VID-1700000000000-abc123xyz",
-    "title": "Paano Mag-apply ng Philippine Passport",
-    "videoUrl": "https://...",
-    "duration": "05:30",
-    "steps": [...],
-    "transcript": "..."
-  }
-}
-```
+*(The `/api/generate-video` endpoint has been removed from the application)*
 
 ### 3. Get Statistics
 ```http
@@ -279,7 +206,6 @@ Response:
   "success": true,
   "stats": {
     "verifiedCount": 1247,
-    "videoCount": 523,
     "userCount": 12458
   }
 }
@@ -313,12 +239,6 @@ Response:
 const PORT = process.env.PORT || 3000;
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// File upload limits
-const FILE_SIZE_LIMIT = {
-  image: 10 * 1024 * 1024,  // 10MB
-  video: 50 * 1024 * 1024   // 50MB
-};
-
 // AI API Configuration (replace with actual Alibaba Cloud credentials)
 const QWEN_API_KEY = process.env.QWEN_API_KEY;
 const QWEN_ENDPOINT = process.env.QWEN_ENDPOINT;
@@ -340,7 +260,7 @@ const API_BASE_URL = 'http://localhost:3000/api';
 Complete deployment guide in **DEPLOYMENT.md** includes:
 
 1. **Setup Alibaba Cloud Account**
-2. **Create OSS Buckets** (frontend, uploads, videos)
+2. **Create OSS Buckets** (frontend, uploads, content)
 3. **Deploy Frontend to OSS + CDN**
 4. **Setup RDS Database**
 5. **Deploy Function Compute** (serverless backend)
@@ -379,7 +299,7 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 - Touch-friendly buttons (44x44px minimum)
 - Single-column layouts
 - Optimized file upload zones
-- Responsive video player
+- Responsive content player
 
 ---
 
@@ -393,8 +313,8 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 - **Success confirmations** for completed actions
 - **Drag-and-drop file upload**
 - **File preview** before verification
-- **Downloadable videos**
-- **Shareable video links**
+- **Downloadable content**
+- **Shareable content links**
 
 ---
 
@@ -419,25 +339,10 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 
 ### Fake News Detector
 - [ ] Text verification works
-- [ ] Image upload and verification
-- [ ] Video upload and verification
 - [ ] Source URL optional field
 - [ ] Loading states display
 - [ ] Results display correctly
 - [ ] Error handling works
-- [ ] File size validation
-- [ ] File type validation
-
-### GovGuide AI
-- [ ] Process selection works
-- [ ] All 8 processes selectable
-- [ ] Language selection works
-- [ ] Detail level selection works
-- [ ] Voice style selection works
-- [ ] Video generation works
-- [ ] Video player displays
-- [ ] Download button works
-- [ ] Share button works
 
 ### Navigation
 - [ ] Desktop navigation works
@@ -459,14 +364,11 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 **Current Implementation:**
 - Backend uses **mock AI responses** (stubs)
 - Replace with actual **Alibaba Cloud Qwen API** in production
-- Video generation uses **placeholder URLs**
-- Implement actual **video rendering service**
 - Stats are **simulated**
 - Connect to real **database** for production
 
 **Production Requirements:**
 - Alibaba Cloud account with Qwen API access
-- Video Generation API subscription
 - RDS database setup
 - OSS bucket configuration
 - Domain name and SSL certificate
@@ -483,7 +385,7 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 2. **Advanced Features**
    - Batch verification (multiple files)
    - Video export in different formats
-   - Custom video branding
+   - Custom content branding
    - Verification reports (PDF export)
 
 3. **Social Features**
