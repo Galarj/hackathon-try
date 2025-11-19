@@ -15,7 +15,7 @@ graph TB
     
     C --> E[Welcome Screen]
     E --> F[Fake News Detector Intro]
-    F --> G[GovGuide AI Intro]
+    F --> G[Fact or Fake Game Intro]
     G --> H[Complete Onboarding]
     H --> I[Save to LocalStorage]
     I --> D
@@ -40,9 +40,9 @@ graph TB
    - **Actions:** "Bumalik" (previous) or "Susunod" (next)
    - **State Change:** Navigate between steps
 
-4. **Step 3: GovGuide AI**
-   - **Screen:** Video generation feature overview
-   - **Content:** Explanation of video guides
+4. **Step 3: Fact or Fake Game**
+   - **Screen:** Game feature overview
+   - **Content:** Explanation of the Fact or Fake game
    - **Actions:** "Bumalik" or "Simulan na!"
    - **State Change:** Complete onboarding
 
@@ -64,7 +64,7 @@ graph LR
     A --> D[Quick Actions]
     
     D --> E[Go to Fake News Detector]
-    D --> F[Go to GovGuide AI]
+    D --> F[Go to AI Debate]
     
     C --> G[View Past Verifications]
     C --> H[View Generated Videos]
@@ -84,15 +84,15 @@ graph LR
    - **Fake News Detector Card**
      - Icon: Search/magnifying glass
      - Title: "I-verify ang Balita"
-     - Description: Upload text/image/video
+     - Description: Paste text news content
      - **Action:** Click → Navigate to Fake News section
      - **Animation:** Card lifts on hover
    
-   - **GovGuide AI Card**
-     - Icon: Video camera
-     - Title: "GovGuide AI"
-     - Description: Generate explainer videos
-     - **Action:** Click → Navigate to GovGuide section
+   - **AI Debate Card**
+     - Icon: Comments
+     - Title: "AI Debate"
+     - Description: Let AI debate any claim
+     - **Action:** Click → Navigate to AI Debate section
      - **Animation:** Card lifts on hover
 
 3. **Recent Activity**
@@ -100,7 +100,7 @@ graph LR
    - **Types:**
      - Verified content (green check icon)
      - Fake news detected (red X icon)
-     - Generated videos (blue video icon)
+     - AI Debate results (blue comments icon)
    - **Format:** Title + timestamp ("2 minutes ago")
    - **Interaction:** Hover highlights row
    - **Auto-refresh:** Updates when new action completes
@@ -113,35 +113,23 @@ graph LR
 
 ```mermaid
 graph TB
-    A[Fake News Section] --> B[Select Input Method]
-    B --> C{Method Type}
+    A[Fake News Section] --> B[Enter Text Content]
+    B --> C[Optional: Add Source URL]
+    C --> D[Click Verify Button]
+    D --> E[Show Loading State]
+    E --> F[AI Processing]
+    F --> G{Processing Result}
     
-    C -->|Text| D[Enter Text Content]
-    C -->|Image| E[Upload Image File]
-    C -->|Video| F[Upload Video File]
+    G -->|Success| H[Show Results]
+    G -->|Error| I[Show Error Modal]
     
-    D --> G[Optional: Add Source URL]
-    E --> H[Preview Image]
-    F --> I[Preview Video]
+    H --> J[View Verdict]
+    J --> K[Read Explanation]
+    K --> L[Check Sources]
+    L --> M[Add to Recent Activity]
     
-    G --> J[Click Verify Button]
-    H --> J
-    I --> J
-    
-    J --> K[Show Loading State]
-    K --> L[AI Processing]
-    L --> M{Processing Result}
-    
-    M -->|Success| N[Show Results]
-    M -->|Error| O[Show Error Modal]
-    
-    N --> P[View Verdict]
-    P --> Q[Read Explanation]
-    Q --> R[Check Sources]
-    R --> S[Add to Recent Activity]
-    
-    O --> T[User Acknowledges Error]
-    T --> B
+    I --> N[User Acknowledges Error]
+    N --> B
 ```
 
 ### Detailed Step-by-Step Flow
@@ -149,17 +137,16 @@ graph TB
 #### PHASE 1: Input Selection
 
 **Step 1: Choose Input Method**
-- **Screen:** Three method buttons (Text, Larawan, Video)
+- **Screen:** Single method button (Text)
 - **Default:** Text method selected
 - **Interaction:**
-  - Click button → Highlight with blue background
-  - Other buttons → Return to default state
-  - Show corresponding input container
-- **State:** `currentInputMethod = 'text'|'image'|'video'`
+  - Text method is always selected
+  - Show text input container
+- **State:** `currentInputMethod = 'text'`
 
 #### PHASE 2: Content Input
 
-**Option A: Text Input**
+**Text Input**
 1. **Display:** Large textarea (6 rows)
 2. **Placeholder:** "Paste mo dito ang balita..."
 3. **Optional:** Source URL input field
@@ -167,34 +154,6 @@ graph TB
    - Text must not be empty
    - URL format validation (optional field)
 5. **Button:** "I-verify ang Balita" (enabled when text entered)
-
-**Option B: Image Upload**
-1. **Display:** Upload zone with dashed border
-2. **Interaction Methods:**
-   - Click zone → Open file picker
-   - Drag & drop → Drop file
-3. **File Validation:**
-   - Format: PNG, JPG, JPEG only
-   - Size: Max 10MB
-   - Show error if invalid
-4. **Preview:**
-   - Show uploaded image
-   - Display filename and size
-5. **Button:** "I-verify ang Larawan" (shown after upload)
-
-**Option C: Video Upload**
-1. **Display:** Upload zone with video icon
-2. **Interaction Methods:**
-   - Click zone → Open file picker
-   - Drag & drop → Drop file
-3. **File Validation:**
-   - Format: MP4, AVI, MOV only
-   - Size: Max 50MB
-   - Show error if invalid
-4. **Preview:**
-   - Show video player with controls
-   - Display filename and size
-5. **Button:** "I-verify ang Video" (shown after upload)
 
 #### PHASE 3: Verification Processing
 
@@ -213,11 +172,10 @@ graph TB
 **Step 3: API Call**
 ```javascript
 POST /api/verify
-FormData: {
-  type: 'text|image|video',
-  content: '...' (if text),
-  file: File (if image/video),
-  sourceUrl: '...' (optional)
+{
+  "type": "text",
+  "content": "...",
+  "sourceUrl": "..." (optional)
 }
 ```
 
@@ -335,7 +293,7 @@ graph TB
 
 ```mermaid
 graph TB
-    A[GovGuide Section] --> B[View Process Grid]
+    A[AI Debate Section] --> B[View Debate Input]
     B --> C[Select Process]
     
     C --> D[Show Process Details]
@@ -451,7 +409,7 @@ graph TB
 **Step 2: Loading State**
 - **Display:**
   - Spinning loader (blue gradient)
-  - Text: "Ginagawa ang video..."
+  - Text: "Analyzing with AI..."
   - Subtext: "Sandali lang, ginagawa ng AI..."
   - Progress bar (animated 0-90%)
 - **Animation:**
@@ -462,7 +420,7 @@ graph TB
 
 **Step 3: API Call**
 ```javascript
-POST /api/generate-video
+*(POST /api/generate-video endpoint removed)*
 JSON: {
   processId: 'passport',
   language: 'tagalog',
@@ -473,79 +431,36 @@ JSON: {
 
 **Step 4: AI Processing**
 - Research process requirements
-- Generate video script
-- Create video with narration
-- Upload to Alibaba OSS
-- Return video URL and metadata
+- Generate debate analysis
+- Create pros and cons breakdown
+- Return debate results
 
-#### PHASE 4: Video Player Display
-
-**Success State: Video Ready**
-
-**Video Player Section:**
-
-1. **Video Header:**
-   - Title: "Generated Video: [Process Name]"
-   - Subtitle: Process description
-
-2. **Video Player:**
-   - **Container:** 16:9 aspect ratio wrapper
-   - **Player:** HTML5 video element
-   - **Controls:** Play/pause, seek, volume, fullscreen
-   - **Autoplay:** Starts automatically
-   - **Quality:** 1080p MP4
-   - **Source:** Alibaba OSS URL
-
-3. **Video Info Box:**
-   - **Background:** Light gray
-   - **Title:** "Video Steps:"
-   - **Content:** Numbered step list
-   - **Format:**
-     - Step 1: "Mag-register online sa DFA"
-     - Step 2: "Piliin ang processing type"
-     - etc.
-
-4. **Action Buttons:**
-   - **Download Button:**
-     - Icon: Download icon
-     - Label: "Download Video"
-     - Action: Trigger file download
-     - Feedback: Success toast
-   
-   - **Share Button:**
-     - Icon: Share icon
-     - Label: "Share"
-     - Action: 
-       - If supported: Native share API
-       - Fallback: Copy link to clipboard
-     - Feedback: "Link Copied" toast
+*(GovGuide Video Player section removed)*
 
 #### PHASE 5: Post-Generation
 
 **Step 1: Add to Recent Activity**
 - Create activity item
-- Type: "Generated: [Process] Guide"
-- Icon: Video icon (blue)
+- Type: "AI Debate: [Claim] Analysis"
+- Icon: Comments icon (blue)
 - Timestamp: "Just now"
 - Insert at top of activity list
 
 **Step 2: Update Stats**
-- Increment video count
+- Increment debate count
 - Refresh dashboard
 - Animate number change
 
 **Step 3: Show Success Modal**
 - Green check icon
-- Title: "Video Generated!"
-- Message: "Ang iyong GovGuide video ay handa na!"
+- Title: "AI Debate Complete!"
+- Message: "Analysis of pros and cons is ready!"
 - Button: "OK"
 - Auto-dismiss after 3 seconds (optional)
 
 **User Post-Actions:**
-- Watch video
-- Download for offline viewing
-- Share with others
-- Generate another video (select new process)
+- View debate results
+- Analyze another claim
 - Navigate to other sections
 
 ---
@@ -557,7 +472,7 @@ JSON: {
 ```mermaid
 graph LR
     A[Home] -.->|Click Nav| B[Fake News]
-    B -.->|Click Nav| C[GovGuide]
+    B -.->|Click Nav| C[AI Debate]
     C -.->|Click Nav| A
     
     A -.->|Action Card| B
@@ -570,7 +485,7 @@ graph LR
   - Nav links (center):
     - Home
     - Fake News Detector
-    - GovGuide AI
+    - AI Debate
   - Active link highlighted (blue background)
   - Hover effect on links
 
@@ -614,7 +529,7 @@ graph LR
    - File upload zones: Larger touch targets
    - Results: Full width, scrollable
 
-3. **GovGuide Section:**
+3. **AI Debate Section:**
    - Process grid: 2 columns (small screens)
    - Process grid: 1 column (very small)
    - Video player: Responsive 16:9

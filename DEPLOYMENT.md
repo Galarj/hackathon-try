@@ -15,7 +15,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                    ALIBABA CLOUD CDN                             │
 │              (Content Delivery Network - Global)                 │
-│         • Cache static assets (HTML, CSS, JS, images)           │
+│         • Cache static assets (HTML, CSS, JS)           │
 │         • SSL/TLS termination                                    │
 │         • DDoS protection                                        │
 └────────────────────┬────────────────────────────────────────────┘
@@ -51,14 +51,14 @@
 │  │  QWEN AI (GenAI)               │ │
 │  │  • Text verification           │ │
 │  │  • Image analysis              │ │
-│  │  • Video deepfake detection    │ │
+│  │  • Content analysis            │ │
 │  │  • Script generation           │ │
 │  └────────────────────────────────┘ │
 │                                      │
 │  ┌────────────────────────────────┐ │
 │  │  OSS (Object Storage)          │ │
 │  │  • User uploads                │ │
-│  │  • Generated videos            │ │
+│  │  • Generated content           │ │
 │  │  • Thumbnails                  │ │
 │  │  • Static assets               │ │
 │  └────────────────────────────────┘ │
@@ -66,15 +66,15 @@
 │  ┌────────────────────────────────┐ │
 │  │  RDS (Database)                │ │
 │  │  • Verification records        │ │
-│  │  • Video metadata              │ │
+│  │  • Content metadata            │ │
 │  │  • User activity logs          │ │
 │  │  • Application stats           │ │
 │  └────────────────────────────────┘ │
 │                                      │
 │  ┌────────────────────────────────┐ │
-│  │  Video Generation Service      │ │
+│  │  Content Generation Service    │ │
 │  │  • Text-to-speech (Filipino)   │ │
-│  │  • Video rendering             │ │
+│  │  • Content rendering            │ │
 │  │  • Subtitle generation         │ │
 │  └────────────────────────────────┘ │
 └──────────────────────────────────────┘
@@ -168,7 +168,7 @@ Load Balancer:
       Target: Function Compute - VerifyFunction
     
     - Path: /api/generate-video
-      Target: Function Compute - VideoGenFunction
+      Target: *(Removed from application)*
     
     - Path: /api/stats
       Target: Function Compute - StatsFunction
@@ -232,34 +232,21 @@ Function: VerifyFunction
     Target CPU: 70%
 ```
 
-**Function 2: Video Generation Function**
+**Function 2: *(Removed from application)*
 ```yaml
-Function: VideoGenFunction
-  Runtime: Node.js 16
-  Handler: index.videoHandler
-  Memory: 1024 MB
-  Timeout: 120 seconds (2 minutes for video generation)
+Function: *(Removed from application)*
+  Runtime: *(Removed from application)*
+  Handler: *(Removed from application)*
+  Memory: *(Removed from application)*
+  Timeout: *(Removed from application)*
   
-  Environment Variables:
-    QWEN_API_KEY: ${qwen_api_key}
-    VIDEO_API_KEY: ${video_api_key}
-    OSS_BUCKET: truthchain-videos
-    RDS_HOST: ${rds_host}
+  Environment Variables: *(Removed from application)*
   
-  Triggers:
-    - Type: HTTP
-      Path: /api/generate-video
-      Methods: POST
+  Triggers: *(Removed from application)*
   
-  Permissions:
-    - OSS: Read/Write
-    - RDS: Read/Write
-    - Qwen AI: Invoke
-    - Video Generation API: Invoke
+  Permissions: *(Removed from application)*
   
-  Auto Scaling:
-    Min Instances: 1
-    Max Instances: 50
+  Auto Scaling: *(Removed from application)*
 ```
 
 **Function 3: Stats & Activity Function**
@@ -294,7 +281,6 @@ Function: StatsFunction
 
 **Purpose:**
 - AI-powered fact-checking
-- Image/video analysis
 - Content generation
 
 **Configuration:**
@@ -318,24 +304,10 @@ Qwen API:
   
   Usage:
     - Fake news verification
-    - Image manipulation detection
-    - Video script generation
     - Filipino language processing
 ```
 
-**Qwen Vision (for Image/Video Analysis):**
-```yaml
-Qwen Vision API:
-  Model: qwen-vl-plus
-  Use Cases:
-    - Image analysis
-    - OCR (text extraction)
-    - Object detection
-    - Manipulation detection
-  
-  Input: Base64 encoded image or video frames
-  Output: JSON analysis results
-```
+*(Image/Video Analysis has been removed from the application)*
 
 ---
 
@@ -344,8 +316,8 @@ Qwen Vision API:
 **Service:** Alibaba Cloud Object Storage Service
 
 **Purpose:**
-- Store user uploads (images, videos)
-- Store generated videos
+- Store user uploads (text)
+- Store generated content
 - Host static assets
 
 **Buckets Configuration:**
@@ -368,13 +340,12 @@ Bucket: truthchain-uploads
     Bucket Policy: Allow Function Compute access
   
   Structure:
-    /images/YYYY/MM/DD/filename.jpg
-    /videos/YYYY/MM/DD/filename.mp4
+    /text/YYYY/MM/DD/filename.txt
 ```
 
-**Bucket 2: Generated Videos**
+**Bucket 2: Generated Content**
 ```yaml
-Bucket: truthchain-videos
+Bucket: truthchain-content
   Region: ap-southeast-5
   Storage Class: Standard
   Access: Public Read
@@ -382,13 +353,11 @@ Bucket: truthchain-videos
   CDN: Enabled for fast delivery
   
   Lifecycle Rules:
-    - Keep all videos indefinitely
+    - Keep all content indefinitely
     - Transition to IA after 90 days
   
   Structure:
-    /videos/{process-id}/{video-id}.mp4
-    /thumbnails/{video-id}.jpg
-    /subtitles/{video-id}.srt
+    /content/{process-id}/{content-id}.txt
 ```
 
 **Bucket 3: Frontend Assets**
@@ -404,7 +373,6 @@ Bucket: truthchain-frontend
     /styles.css
     /app.js
     /assets/icons/
-    /assets/images/
 ```
 
 ---
@@ -415,7 +383,7 @@ Bucket: truthchain-frontend
 
 **Purpose:**
 - Store verification records
-- Store video metadata
+- Store content metadata
 - User activity tracking
 - Application statistics
 
@@ -451,7 +419,7 @@ RDS Instance:
 CREATE TABLE verifications (
   id VARCHAR(50) PRIMARY KEY,
   user_id VARCHAR(50),
-  type ENUM('text', 'image', 'video'),
+  type ENUM('text'),
   content TEXT,
   file_path VARCHAR(255),
   source_url VARCHAR(500),
@@ -469,24 +437,19 @@ CREATE TABLE verifications (
   INDEX idx_status (status)
 );
 
--- Generated Videos Table
-CREATE TABLE generated_videos (
+-- Generated Content Table *(Removed from application)*
+CREATE TABLE generated_content (
   id VARCHAR(50) PRIMARY KEY,
   user_id VARCHAR(50),
   process_id VARCHAR(50),
   title VARCHAR(255),
   description TEXT,
-  video_url VARCHAR(500),
-  thumbnail_url VARCHAR(500),
-  duration VARCHAR(10),
+  content_url VARCHAR(500),
   language VARCHAR(20),
   steps JSON,
   transcript TEXT,
   ai_model VARCHAR(50),
   generation_time INT,
-  views INT DEFAULT 0,
-  likes INT DEFAULT 0,
-  shares INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_process (process_id),
   INDEX idx_created (created_at)
@@ -496,7 +459,7 @@ CREATE TABLE generated_videos (
 CREATE TABLE user_activity (
   id VARCHAR(50) PRIMARY KEY,
   user_id VARCHAR(50),
-  activity_type ENUM('verification', 'video_generation', 'video_view', 'share'),
+  activity_type ENUM('verification'),
   reference_id VARCHAR(50),
   status VARCHAR(50),
   title VARCHAR(255),
@@ -510,27 +473,26 @@ CREATE TABLE app_stats (
   id INT PRIMARY KEY AUTO_INCREMENT,
   verified_count INT DEFAULT 0,
   fake_news_detected INT DEFAULT 0,
-  video_count INT DEFAULT 0,
+  // video_count INT DEFAULT 0, (removed)
   user_count INT DEFAULT 0,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
+│  • Text analysis               │ │
 
 ---
 
 ### 7. VIDEO GENERATION SERVICE
 
-**Service:** Alibaba Cloud Video AI + Custom Integration
+**Service:** Alibaba Cloud Content AI + Custom Integration
 
 **Purpose:**
-- Generate explainer videos from scripts
+- Generate explainer content from scripts
 - Text-to-speech in Filipino
-- Video editing and rendering
+- Content editing and rendering
 
 **Configuration:**
 ```yaml
-Video Generation:
-  Service: Custom integration with video generation API
+Content Generation:
+  Service: Custom integration with content generation API
   
   Text-to-Speech:
     Provider: Alibaba Cloud Text-to-Speech
@@ -538,14 +500,14 @@ Video Generation:
     Voice: Female/Male (configurable)
     Quality: High (24kHz)
   
-  Video Rendering:
+  Content Rendering:
     Resolution: 1920x1080 (1080p)
     Format: MP4 (H.264)
     Frame Rate: 30 fps
     Bitrate: 5 Mbps
   
   Components:
-    - Background images/videos
+    - Background images/content
     - Text overlays (step numbers, titles)
     - Animated transitions
     - Filipino narration
@@ -553,7 +515,7 @@ Video Generation:
     - Subtitles (SRT format)
   
   Output:
-    Upload to OSS: truthchain-videos bucket
+    Upload to OSS: truthchain-content bucket
     Generate thumbnail: First frame
     Generate subtitles: Auto-sync with narration
 ```
@@ -663,12 +625,12 @@ Log Service (SLS):
 # Using Alibaba Cloud CLI
 aliyun oss mb oss://truthchain-frontend --region ap-southeast-5
 aliyun oss mb oss://truthchain-uploads --region ap-southeast-5
-aliyun oss mb oss://truthchain-videos --region ap-southeast-5
+# aliyun oss mb oss://truthchain-content --region ap-southeast-5 (removed)
 
 # Set bucket policies
 aliyun oss set-bucket-acl --bucket truthchain-frontend --acl public-read
 aliyun oss set-bucket-acl --bucket truthchain-uploads --acl private
-aliyun oss set-bucket-acl --bucket truthchain-videos --acl public-read
+# aliyun oss set-bucket-acl --bucket truthchain-content --acl public-read (removed)
 ```
 
 **3. Deploy Frontend to OSS**
@@ -734,15 +696,15 @@ aliyun fc CreateFunction \
   --memorySize 512 \
   --timeout 30
 
-# Deploy video generation function
-aliyun fc CreateFunction \
-  --serviceName truthchain-api \
-  --functionName VideoGenFunction \
-  --runtime nodejs16 \
-  --handler index.videoHandler \
-  --codeZipFile function.zip \
-  --memorySize 1024 \
-  --timeout 120
+# Deploy content generation function *(Removed from application)*
+# aliyun fc CreateFunction \
+#   --serviceName truthchain-api \
+#   --functionName ContentGenFunction \
+#   --runtime nodejs16 \
+#   --handler index.contentHandler \
+#   --codeZipFile function.zip \
+#   --memorySize 1024 \
+#   --timeout 120
 ```
 
 **7. Configure Load Balancer**
@@ -783,7 +745,6 @@ OSS Storage               100GB                      $2
 OSS Traffic               1TB outbound               $120
 CDN Traffic               5TB                        $200
 Qwen AI API               10K requests               $50
-Video Generation API      500 videos                 $100
 Load Balancer             1 instance                 $20
 CloudMonitor              Standard                   $5
 Log Service               10GB/day                   $10

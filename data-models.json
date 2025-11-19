@@ -3,7 +3,7 @@
   
   "models": {
     "VerificationSubmission": {
-      "description": "User submission for news verification (text/image/video)",
+      "description": "User submission for news verification (text only)",
       "schema": {
         "submissionId": {
           "type": "string",
@@ -17,33 +17,13 @@
         },
         "type": {
           "type": "string",
-          "enum": ["text", "image", "video"],
+          "enum": ["text"],
           "description": "Type of content being verified"
         },
         "content": {
           "type": "string",
-          "description": "Text content (for text type)",
+          "description": "Text content",
           "example": "Breaking news: Government announces new policy..."
-        },
-        "fileUrl": {
-          "type": "string",
-          "description": "URL to uploaded file (for image/video type)",
-          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/uploads/image-123.jpg"
-        },
-        "fileName": {
-          "type": "string",
-          "description": "Original filename",
-          "example": "news-screenshot.jpg"
-        },
-        "fileSize": {
-          "type": "number",
-          "description": "File size in bytes",
-          "example": 2048576
-        },
-        "mimeType": {
-          "type": "string",
-          "description": "MIME type of uploaded file",
-          "example": "image/jpeg"
         },
         "sourceUrl": {
           "type": "string",
@@ -188,228 +168,17 @@
     },
     
     "VideoGenerationRequest": {
-      "description": "Request to generate government process explainer video",
-      "schema": {
-        "requestId": {
-          "type": "string",
-          "description": "Unique request identifier",
-          "example": "VID-1700000000000-abc123xyz"
-        },
-        "userId": {
-          "type": "string",
-          "description": "User identifier (optional)",
-          "example": "USER-12345"
-        },
-        "processId": {
-          "type": "string",
-          "enum": [
-            "passport",
-            "drivers-license",
-            "nbi-clearance",
-            "bir-registration",
-            "sss-registration",
-            "philhealth",
-            "pagibig",
-            "business-permit"
-          ],
-          "description": "Government process type"
-        },
-        "processName": {
-          "type": "string",
-          "description": "Human-readable process name",
-          "example": "Passport Application"
-        },
-        "language": {
-          "type": "string",
-          "enum": ["tagalog", "taglish", "english"],
-          "description": "Video language preference",
-          "default": "tagalog"
-        },
-        "detailLevel": {
-          "type": "string",
-          "enum": ["basic", "detailed", "comprehensive"],
-          "description": "Level of detail in the video",
-          "default": "detailed"
-        },
-        "voiceStyle": {
-          "type": "string",
-          "enum": ["friendly", "professional", "enthusiastic"],
-          "description": "AI voice style preference",
-          "default": "friendly"
-        },
-        "customization": {
-          "type": "object",
-          "description": "Optional customization parameters",
-          "properties": {
-            "includeSubtitles": {
-              "type": "boolean",
-              "default": true
-            },
-            "videoQuality": {
-              "type": "string",
-              "enum": ["720p", "1080p"],
-              "default": "1080p"
-            },
-            "backgroundMusic": {
-              "type": "boolean",
-              "default": true
-            },
-            "accentColor": {
-              "type": "string",
-              "example": "#0038a8"
-            }
-          }
-        },
-        "requestedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp of request",
-          "example": "2025-11-19T10:35:00.000Z"
-        }
-      }
+      "description": "*(Removed from application)*",
+      "schema": {}
     },
     
     "GeneratedVideo": {
-      "description": "Generated government guide video with metadata",
-      "schema": {
-        "videoId": {
-          "type": "string",
-          "description": "Unique video identifier",
-          "example": "VID-1700000000000-abc123xyz"
-        },
-        "requestId": {
-          "type": "string",
-          "description": "Reference to generation request",
-          "example": "VID-1700000000000-abc123xyz"
-        },
-        "processId": {
-          "type": "string",
-          "description": "Government process identifier",
-          "example": "passport"
-        },
-        "title": {
-          "type": "string",
-          "description": "Video title",
-          "example": "Step-by-Step Guide: Philippine Passport Application"
-        },
-        "description": {
-          "type": "string",
-          "description": "Video description",
-          "example": "Kompletong gabay sa pag-apply ng Philippine Passport..."
-        },
-        "videoUrl": {
-          "type": "string",
-          "description": "URL to video file (Alibaba OSS)",
-          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/videos/passport-guide-123.mp4"
-        },
-        "thumbnailUrl": {
-          "type": "string",
-          "description": "URL to video thumbnail",
-          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/thumbnails/passport-guide-123.jpg"
-        },
-        "duration": {
-          "type": "string",
-          "description": "Video duration in MM:SS format",
-          "example": "05:30"
-        },
-        "durationSeconds": {
-          "type": "number",
-          "description": "Duration in seconds",
-          "example": 330
-        },
-        "fileSize": {
-          "type": "number",
-          "description": "Video file size in bytes",
-          "example": 52428800
-        },
-        "resolution": {
-          "type": "string",
-          "description": "Video resolution",
-          "example": "1920x1080"
-        },
-        "language": {
-          "type": "string",
-          "description": "Video language",
-          "example": "tagalog"
-        },
-        "steps": {
-          "type": "array",
-          "description": "Step-by-step process breakdown",
-          "items": {
-            "type": "object",
-            "properties": {
-              "stepNumber": { "type": "number", "example": 1 },
-              "title": { "type": "string", "example": "Mag-register online" },
-              "description": { "type": "string", "example": "Pumunta sa DFA appointment system..." },
-              "timestamp": { "type": "string", "example": "00:45" },
-              "estimatedTime": { "type": "string", "example": "10-15 minutes" },
-              "requiredDocuments": {
-                "type": "array",
-                "items": { "type": "string" },
-                "example": ["Valid ID", "Birth Certificate"]
-              },
-              "fees": {
-                "type": "object",
-                "properties": {
-                  "amount": { "type": "number", "example": 950 },
-                  "currency": { "type": "string", "example": "PHP" },
-                  "description": { "type": "string", "example": "Regular processing" }
-                }
-              },
-              "tips": {
-                "type": "array",
-                "items": { "type": "string" },
-                "example": ["Mag-book ng appointment ng maaga"]
-              }
-            }
-          }
-        },
-        "transcript": {
-          "type": "string",
-          "description": "Full video transcript",
-          "example": "Kamusta, Pilipino! Sa video na ito, tutulungan natin kayo sa pag-apply ng Philippine Passport..."
-        },
-        "subtitlesUrl": {
-          "type": "string",
-          "description": "URL to SRT subtitle file",
-          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/subtitles/passport-guide-123.srt"
-        },
-        "aiModel": {
-          "type": "string",
-          "description": "AI model used for generation",
-          "example": "Alibaba Qwen-2.5 + VideoGen"
-        },
-        "generationTime": {
-          "type": "number",
-          "description": "Generation time in milliseconds",
-          "example": 45678
-        },
-        "generatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp when video was generated",
-          "example": "2025-11-19T10:36:30.000Z"
-        },
-        "views": {
-          "type": "number",
-          "description": "Number of views",
-          "default": 0
-        },
-        "likes": {
-          "type": "number",
-          "description": "Number of likes",
-          "default": 0
-        },
-        "shares": {
-          "type": "number",
-          "description": "Number of shares",
-          "default": 0
-        }
-      }
+      "description": "*(Removed from application)*",
+      "schema": {}
     },
     
     "UserActivity": {
-      "description": "User activity tracking for recent verifications and videos",
+      "description": "User activity tracking for recent verifications",
       "schema": {
         "activityId": {
           "type": "string",
@@ -421,12 +190,12 @@
         },
         "activityType": {
           "type": "string",
-          "enum": ["verification", "video_generation", "video_view", "share"],
+          "enum": ["verification"],
           "example": "verification"
         },
         "referenceId": {
           "type": "string",
-          "description": "ID of related verification or video",
+          "description": "ID of related verification",
           "example": "VER-1700000000000-abc123xyz"
         },
         "status": {
@@ -462,8 +231,8 @@
         },
         "videoCount": {
           "type": "number",
-          "description": "Total videos generated",
-          "example": 523
+          "description": "Total videos generated (removed from application)",
+          "example": 0
         },
         "userCount": {
           "type": "number",
@@ -507,15 +276,15 @@
             "type": {
               "type": "string",
               "required": true,
-              "enum": ["text", "image", "video"]
+              "enum": ["text"]
             },
             "content": {
               "type": "string",
               "required": "conditional (if type=text)"
             },
             "file": {
-              "type": "file",
-              "required": "conditional (if type=image or video)"
+              "type": "string",
+              "description": "File field (removed from application)"
             },
             "sourceUrl": {
               "type": "string",
@@ -531,14 +300,14 @@
       {
         "method": "POST",
         "path": "/api/generate-video",
-        "description": "Generate government process explainer video",
+        "description": "*(Removed from application)*",
         "requestBody": {
           "contentType": "application/json",
           "schema": "VideoGenerationRequest"
         },
         "response": {
-          "success": true,
-          "result": "GeneratedVideo"
+          "success": false,
+          "message": "Endpoint removed from application"
         }
       },
       {
