@@ -1261,3 +1261,515 @@ select:focus {
         display: block !important;
     }
 }
+
+/* ==========================================
+   FACT OR FAKE GAME STYLES
+   ========================================== */
+
+.game-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.game-screen {
+    display: none;
+    animation: fadeIn var(--transition-base);
+}
+
+.game-screen.active {
+    display: block;
+}
+
+/* Welcome Screen */
+.game-welcome-content {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: var(--primary-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.game-icon {
+    font-size: 4rem;
+    color: var(--primary-blue);
+    margin-bottom: var(--spacing-md);
+}
+
+.game-welcome-content h2 {
+    font-size: var(--font-size-3xl);
+    color: var(--dark-gray);
+    margin-bottom: var(--spacing-sm);
+}
+
+.game-welcome-content > p {
+    font-size: var(--font-size-lg);
+    color: var(--medium-gray);
+    margin-bottom: var(--spacing-xl);
+}
+
+.game-instructions {
+    background: var(--light-gray);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    margin: var(--spacing-lg) 0;
+    text-align: left;
+}
+
+.game-instructions h3 {
+    color: var(--primary-blue);
+    margin-bottom: var(--spacing-md);
+}
+
+.game-instructions ul {
+    list-style: none;
+}
+
+.game-instructions li {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-lg);
+}
+
+.game-instructions li i {
+    color: var(--success-green);
+    margin-right: var(--spacing-sm);
+}
+
+/* Game Stats */
+.game-stats {
+    display: flex;
+    justify-content: space-around;
+    background: var(--primary-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--medium-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: bold;
+    color: var(--primary-blue);
+}
+
+/* Claim Card */
+.claim-card {
+    background: var(--primary-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-lg);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.claim-header {
+    font-size: var(--font-size-sm);
+    color: var(--medium-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-md);
+}
+
+.claim-text {
+    font-size: var(--font-size-2xl);
+    color: var(--dark-gray);
+    line-height: 1.8;
+    font-weight: 500;
+}
+
+/* Game Buttons */
+.game-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.btn-game {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    font-size: var(--font-size-xl);
+    font-weight: bold;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-game:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-game:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-game i {
+    font-size: var(--font-size-2xl);
+}
+
+.btn-true {
+    background: linear-gradient(135deg, var(--success-green), #059669);
+    color: var(--primary-white);
+}
+
+.btn-true:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669, var(--success-green));
+}
+
+.btn-false {
+    background: linear-gradient(135deg, var(--error-red), #dc2626);
+    color: var(--primary-white);
+}
+
+.btn-false:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626, var(--error-red));
+}
+
+/* Result Feedback */
+.feedback-correct,
+.feedback-wrong {
+    text-align: center;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.feedback-correct {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border: 3px solid var(--success-green);
+}
+
+.feedback-wrong {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 3px solid var(--error-red);
+}
+
+.feedback-correct i {
+    font-size: 4rem;
+    color: var(--success-green);
+    display: block;
+    margin-bottom: var(--spacing-md);
+}
+
+.feedback-wrong i {
+    font-size: 4rem;
+    color: var(--error-red);
+    display: block;
+    margin-bottom: var(--spacing-md);
+}
+
+.feedback-correct h2 {
+    font-size: var(--font-size-3xl);
+    color: var(--success-green);
+    margin-bottom: var(--spacing-sm);
+}
+
+.feedback-wrong h2 {
+    font-size: var(--font-size-3xl);
+    color: var(--error-red);
+    margin-bottom: var(--spacing-sm);
+}
+
+.feedback-correct p,
+.feedback-wrong p {
+    font-size: var(--font-size-lg);
+    color: var(--dark-gray);
+}
+
+/* Explanation */
+.result-explanation {
+    background: var(--primary-white);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.explanation-content h3 {
+    color: var(--primary-blue);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.explanation-list {
+    list-style: none;
+    margin-bottom: var(--spacing-lg);
+}
+
+.explanation-list li {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-blue);
+    font-size: var(--font-size-lg);
+    line-height: 1.6;
+}
+
+.game-sources {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 2px solid var(--border-gray);
+}
+
+.game-sources h4 {
+    color: var(--medium-gray);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.game-sources ul {
+    list-style: none;
+}
+
+.game-sources li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.game-sources a {
+    color: var(--info-blue);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    word-break: break-all;
+}
+
+.game-sources a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Game Styles */
+@media (max-width: 768px) {
+    .game-welcome-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .game-icon {
+        font-size: 3rem;
+    }
+    
+    .game-welcome-content h2 {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .game-stats {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .stat-value {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .claim-text {
+        font-size: var(--font-size-xl);
+    }
+    
+    .game-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-game {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: var(--font-size-lg);
+    }
+    
+    .feedback-correct i,
+    .feedback-wrong i {
+        font-size: 3rem;
+    }
+    
+    .explanation-list li {
+        font-size: var(--font-size-base);
+    }
+}
+
+/* ==========================================
+   AI DEBATE STYLES
+   ========================================== */
+
+.debate-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.input-section {
+    background: var(--primary-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.input-section h3 {
+    color: var(--primary-blue);
+    margin-bottom: var(--spacing-md);
+}
+
+#debateContent {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-md);
+    resize: vertical;
+    min-height: 150px;
+}
+
+#debateContent:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
+}
+
+.debate-results {
+    display: none;
+    background: var(--primary-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.debate-results.active {
+    display: block;
+    animation: fadeIn var(--transition-base);
+}
+
+.debate-header {
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, var(--primary-blue), #0048d8);
+    color: var(--primary-white);
+}
+
+.debate-header h2 {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.debate-claim {
+    font-style: italic;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.debate-content {
+    padding: var(--spacing-lg);
+}
+
+.debate-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.debate-section:last-child {
+    margin-bottom: 0;
+}
+
+.debate-section h3 {
+    color: var(--primary-blue);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.pro-arguments {
+    color: var(--success-green);
+}
+
+.con-arguments {
+    color: var(--error-red);
+}
+
+.debate-points {
+    list-style: none;
+}
+
+.debate-points li {
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    background: var(--light-gray);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+}
+
+.debate-points li:before {
+    content: "•";
+    font-weight: bold;
+    font-size: var(--font-size-lg);
+}
+
+.pro-arguments .debate-points li:before {
+    color: var(--success-green);
+}
+
+.con-arguments .debate-points li:before {
+    color: var(--error-red);
+}
+
+.debate-summary {
+    background: var(--light-gray);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-blue);
+}
+
+.debate-summary h3 {
+    color: var(--primary-blue);
+    margin-bottom: var(--spacing-sm);
+}
+
+.debate-summary p {
+    font-size: var(--font-size-lg);
+    line-height: 1.6;
+}
+
+/* Responsive Debate Styles */
+@media (max-width: 768px) {
+    .input-section,
+    .debate-results {
+        padding: var(--spacing-md);
+    }
+    
+    .debate-header h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .debate-points li {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+    }
+}

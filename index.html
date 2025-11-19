@@ -25,7 +25,7 @@
                     <i class="fas fa-search"></i>
                 </div>
                 <h2>Fake News Detector</h2>
-                <p>I-upload ang text, larawan, o video para i-verify kung totoo o fake ang balita</p>
+                <p>I-paste ang text ng balita para i-verify kung totoo o fake</p>
                 <div class="onboarding-actions">
                     <button class="btn btn-secondary" onclick="prevOnboardingStep()">Bumalik</button>
                     <button class="btn btn-primary" onclick="nextOnboardingStep()">Susunod</button>
@@ -34,10 +34,10 @@
             
             <div class="onboarding-step" data-step="3">
                 <div class="onboarding-icon">
-                    <i class="fas fa-video"></i>
+                    <i class="fas fa-gamepad"></i>
                 </div>
-                <h2>GovGuide AI</h2>
-                <p>Makakuha ng step-by-step video guide para sa mga government processes</p>
+                <h2>Fact or Fake Game</h2>
+                <p>Maglaro at subukan ang iyong fact-checking skills</p>
                 <div class="onboarding-actions">
                     <button class="btn btn-secondary" onclick="prevOnboardingStep()">Bumalik</button>
                     <button class="btn btn-primary" onclick="completeOnboarding()">Simulan na!</button>
@@ -62,9 +62,13 @@
                     <i class="fas fa-search"></i>
                     <span>Fake News Detector</span>
                 </a>
-                <a href="#govguide" class="nav-link" onclick="showSection('govguide')">
-                    <i class="fas fa-video"></i>
-                    <span>GovGuide AI</span>
+                <a href="#ai-debate" class="nav-link" onclick="showSection('ai-debate')">
+                    <i class="fas fa-comments"></i>
+                    <span>AI Debate</span>
+                </a>
+                <a href="#fact-game" class="nav-link" onclick="showSection('fact-game')">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Fact or Fake Game</span>
                 </a>
             </div>
             <div class="nav-mobile-toggle" onclick="toggleMobileMenu()">
@@ -81,8 +85,8 @@
         <a href="#fake-news" onclick="showSection('fake-news'); toggleMobileMenu()">
             <i class="fas fa-search"></i> Fake News Detector
         </a>
-        <a href="#govguide" onclick="showSection('govguide'); toggleMobileMenu()">
-            <i class="fas fa-video"></i> GovGuide AI
+        <a href="#ai-debate" onclick="showSection('ai-debate'); toggleMobileMenu()">
+            <i class="fas fa-comments"></i> AI Debate
         </a>
     </div>
 
@@ -94,21 +98,7 @@
                 <p class="hero-subtitle">Handa na ba kayong malaman ang totoo?</p>
                 
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value" id="verifiedCount">1,247</div>
-                        <div class="stat-label">Na-verify na balita</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-video"></i></div>
-                        <div class="stat-value" id="videoCount">523</div>
-                        <div class="stat-label">GovGuide videos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" id="userCount">12,458</div>
-                        <div class="stat-label">Active users</div>
-                    </div>
+
                 </div>
 
                 <div class="action-cards">
@@ -117,26 +107,17 @@
                             <i class="fas fa-search"></i>
                         </div>
                         <h3>I-verify ang Balita</h3>
-                        <p>Upload ng text, image, o video para i-check kung totoo</p>
+                        <p>I-paste ang text ng balita para i-check kung totoo</p>
                         <button class="btn btn-outline">Simulan →</button>
                     </div>
                     
-                    <div class="action-card" onclick="showSection('govguide')">
-                        <div class="action-icon govguide-bg">
-                            <i class="fas fa-video"></i>
+                    <div class="action-card" onclick="showSection('ai-debate')">
+                        <div class="action-icon" style="background: linear-gradient(135deg, #059669, #047857);">
+                            <i class="fas fa-comments"></i>
                         </div>
-                        <h3>GovGuide AI</h3>
-                        <p>Manood ng AI-generated explainer videos para sa gov processes</p>
+                        <h3>AI Debate</h3>
+                        <p>Let AI debate any claim with pros and cons</p>
                         <button class="btn btn-outline">Simulan →</button>
-                    </div>
-                    
-                    <div class="action-card" onclick="generateGameDesign()">
-                        <div class="action-icon" style="background: linear-gradient(135deg, #9333ea, #c026d3);">
-                            <i class="fas fa-magic"></i>
-                        </div>
-                        <h3>Game Design Generator</h3>
-                        <p>AI creates UI/UX design + code logic for fact-checking games</p>
-                        <button class="btn btn-outline">Generate →</button>
                     </div>
                 </div>
             </div>
@@ -156,7 +137,7 @@
         <div class="container">
             <div class="section-header">
                 <h1><i class="fas fa-search"></i> Fake News Detector</h1>
-                <p>I-upload ang text, larawan, o video para malaman kung totoo o fake</p>
+                <p>I-paste ang text ng balita para malaman kung totoo o fake</p>
             </div>
 
             <div class="verification-container">
@@ -165,14 +146,6 @@
                     <button class="method-btn active" data-method="text" onclick="selectInputMethod('text')">
                         <i class="fas fa-font"></i>
                         <span>Text</span>
-                    </button>
-                    <button class="method-btn" data-method="image" onclick="selectInputMethod('image')">
-                        <i class="fas fa-image"></i>
-                        <span>Larawan</span>
-                    </button>
-                    <button class="method-btn" data-method="video" onclick="selectInputMethod('video')">
-                        <i class="fas fa-video"></i>
-                        <span>Video</span>
                     </button>
                 </div>
 
@@ -191,34 +164,6 @@
                         <i class="fas fa-search"></i> I-verify ang Balita
                     </button>
                 </div>
-
-                <!-- Image Input -->
-                <div id="imageInput" class="input-container">
-                    <div class="upload-zone" id="imageUploadZone" onclick="document.getElementById('imageFile').click()">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Click o i-drag ang larawan dito</p>
-                        <small>PNG, JPG, JPEG (max 10MB)</small>
-                    </div>
-                    <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="handleFileUpload('image')">
-                    <div id="imagePreview" class="file-preview"></div>
-                    <button class="btn btn-primary btn-large" id="verifyImageBtn" style="display: none;" onclick="verifyNews('image')">
-                        <i class="fas fa-search"></i> I-verify ang Larawan
-                    </button>
-                </div>
-
-                <!-- Video Input -->
-                <div id="videoInput" class="input-container">
-                    <div class="upload-zone" id="videoUploadZone" onclick="document.getElementById('videoFile').click()">
-                        <i class="fas fa-video"></i>
-                        <p>Click o i-drag ang video dito</p>
-                        <small>MP4, AVI, MOV (max 50MB)</small>
-                    </div>
-                    <input type="file" id="videoFile" accept="video/*" style="display: none;" onchange="handleFileUpload('video')">
-                    <div id="videoPreview" class="file-preview"></div>
-                    <button class="btn btn-primary btn-large" id="verifyVideoBtn" style="display: none;" onclick="verifyNews('video')">
-                        <i class="fas fa-search"></i> I-verify ang Video
-                    </button>
-                </div>
             </div>
 
             <!-- Loading State -->
@@ -235,77 +180,131 @@
         </div>
     </section>
 
-    <!-- GovGuide AI Section -->
-    <section id="govguide" class="section">
+    <!-- AI Debate Section -->
+    <section id="ai-debate" class="section">
         <div class="container">
             <div class="section-header">
-                <h1><i class="fas fa-video"></i> GovGuide AI Video Generator</h1>
-                <p>Makakuha ng AI-generated step-by-step video guide para sa government processes</p>
+                <h1><i class="fas fa-comments"></i> AI Debate</h1>
+                <p>Let AI debate any article or claim. Get pros, cons, and balanced insights.</p>
             </div>
 
-            <div class="govguide-container">
-                <!-- Process Selection -->
-                <div class="process-selector">
-                    <h3>Piliin ang Government Process:</h3>
-                    <div class="process-grid">
-                        <div class="process-card" onclick="selectProcess('passport')">
-                            <i class="fas fa-passport"></i>
-                            <span>Passport Application</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('drivers-license')">
-                            <i class="fas fa-id-card"></i>
-                            <span>Driver's License</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('nbi-clearance')">
-                            <i class="fas fa-file-alt"></i>
-                            <span>NBI Clearance</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('bir-registration')">
-                            <i class="fas fa-file-invoice"></i>
-                            <span>BIR Registration</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('sss-registration')">
-                            <i class="fas fa-id-badge"></i>
-                            <span>SSS Registration</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('philhealth')">
-                            <i class="fas fa-heartbeat"></i>
-                            <span>PhilHealth</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('pagibig')">
-                            <i class="fas fa-home"></i>
-                            <span>Pag-IBIG</span>
-                        </div>
-                        <div class="process-card" onclick="selectProcess('business-permit')">
-                            <i class="fas fa-briefcase"></i>
-                            <span>Business Permit</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Selected Process Details -->
-                <div id="processDetails" class="process-details">
-                    <!-- Populated when process is selected -->
-                </div>
-
-                <!-- Video Generation Options -->
-                <div id="videoOptions" class="video-options">
-                    <!-- Populated when process is selected -->
+            <div class="debate-container">
+                <!-- Input Section -->
+                <div class="input-section">
+                    <h3>Submit an article, claim, or statement:</h3>
+                    <textarea 
+                        id="debateContent" 
+                        placeholder="Paste an article, claim, or statement here...\n\nExample: 'The government should increase the minimum wage to improve workers' living standards.'"
+                        rows="8"></textarea>
+                    <button class="btn btn-primary btn-large" onclick="analyzeDebate()">
+                        <i class="fas fa-balance-scale"></i> Let AI Debate This
+                    </button>
                 </div>
 
                 <!-- Loading State -->
-                <div id="videoLoading" class="loading-state">
+                <div id="debateLoading" class="loading-state">
                     <div class="spinner"></div>
-                    <p>Ginagawa ang video...</p>
-                    <small>Sandali lang, ginagawa ng AI ang explainer video...</small>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="videoProgress"></div>
+                    <p>Analyzing with AI...</p>
+                    <small>Extracting claim and generating balanced debate...</small>
+                </div>
+
+                <!-- Results Section -->
+                <div id="debateResults" class="debate-results">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fact or Fake Game Section -->
+    <section id="fact-game" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-gamepad"></i> Fact or Fake? Game</h1>
+                <p>Test your fact-checking skills! AI-generated True or False game</p>
+            </div>
+
+            <div class="game-container">
+                <!-- Game Welcome Screen -->
+                <div id="gameWelcome" class="game-screen active">
+                    <div class="game-welcome-content">
+                        <div class="game-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h2>Welcome to Fact or Fake!</h2>
+                        <p>Kumusta, fact-checker! Ready ka na ba?</p>
+                        <div class="game-instructions">
+                            <h3>How to Play:</h3>
+                            <ul>
+                                <li><i class="fas fa-check"></i> AI will give you a statement</li>
+                                <li><i class="fas fa-check"></i> Guess if it's TRUE or FALSE</li>
+                                <li><i class="fas fa-check"></i> Learn why it's right or wrong</li>
+                                <li><i class="fas fa-check"></i> Build your streak!</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary btn-large" onclick="startFactGame()">
+                            <i class="fas fa-play"></i> Start Playing
+                        </button>
                     </div>
                 </div>
 
-                <!-- Video Player -->
-                <div id="videoPlayer" class="video-player-container">
-                    <!-- Populated with generated video -->
+                <!-- Game Loading Screen -->
+                <div id="gameLoading" class="game-screen">
+                    <div class="spinner"></div>
+                    <p>AI is generating a claim...</p>
+                    <small>Sandali lang...</small>
+                </div>
+
+                <!-- Game Play Screen -->
+                <div id="gamePlay" class="game-screen">
+                    <div class="game-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Round</span>
+                            <span class="stat-value" id="currentRound">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Score</span>
+                            <span class="stat-value" id="gameScore">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value" id="gameStreak">0</span>
+                        </div>
+                    </div>
+
+                    <div class="claim-card">
+                        <div class="claim-header">Statement:</div>
+                        <div class="claim-text" id="claimText"></div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game btn-true" onclick="submitGameAnswer('TRUE')">
+                            <i class="fas fa-check-circle"></i>
+                            TRUE
+                        </button>
+                        <button class="btn-game btn-false" onclick="submitGameAnswer('FALSE')">
+                            <i class="fas fa-times-circle"></i>
+                            FALSE
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Result Screen -->
+                <div id="gameResult" class="game-screen">
+                    <div class="result-feedback" id="resultFeedback">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="result-explanation" id="resultExplanation">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <button class="btn btn-primary btn-large" onclick="nextGameRound()">
+                        Next Round <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn btn-outline" onclick="quitGame()">
+                        Quit Game
+                    </button>
                 </div>
             </div>
         </div>

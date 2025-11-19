@@ -11,7 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Alibaba Cloud Qwen API Configuration
-const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || 'sk-7631ebf5379b47db85215c0b3b95d9c1';
+const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || 'sk-7631ebf5379b47db85215c0b3b95d9c1'; // For truth detector
+const GAME_API_KEY = process.env.GAME_API_KEY || 'sk-5e8ca8408f1742f89efc5574f360afc2'; // For game
 const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL = 'qwen-plus';
 
@@ -28,10 +29,9 @@ app.use(express.static('public'));
 // In-memory storage (replace with database in production)
 const dataStore = {
     verifications: [],
-    videos: [],
+    // Only text verification is supported now
     stats: {
         verifiedCount: 1247,
-        videoCount: 523,
         userCount: 12458
     }
 };
@@ -58,37 +58,7 @@ class VerificationResult {
     }
 }
 
-// Video Generation Request Schema
-class VideoGenerationRequest {
-    constructor(data) {
-        this.id = this.generateId();
-        this.processId = data.processId;
-        this.language = data.language; // 'tagalog', 'taglish', 'english'
-        this.detailLevel = data.detailLevel; // 'basic', 'detailed', 'comprehensive'
-        this.voiceStyle = data.voiceStyle; // 'friendly', 'professional', 'enthusiastic'
-        this.timestamp = new Date().toISOString();
-    }
-    
-    generateId() {
-        return 'VID-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    }
-}
-
-// Generated Video Schema
-class GeneratedVideo {
-    constructor(data) {
-        this.id = data.requestId;
-        this.processId = data.processId;
-        this.title = data.title;
-        this.videoUrl = data.videoUrl;
-        this.duration = data.duration;
-        this.steps = data.steps;
-        this.language = data.language;
-        this.transcript = data.transcript || null;
-        this.timestamp = new Date().toISOString();
-        this.aiModel = 'Alibaba Qwen-2.5 + Video Generation';
-    }
-}
+// Only text verification is supported now
 
 // ==========================================
 // API ENDPOINTS
@@ -207,9 +177,12 @@ async function verifyWithAI(data) {
 }
 
 // Call Alibaba Cloud Qwen API for News Verification
-async function callQwenAPI(prompt, data) {
+async function callQwenAPI(prompt, data, useGameKey = false) {
     try {
         const axios = require('axios');
+        
+        // Use appropriate API key based on context
+        const apiKey = useGameKey ? GAME_API_KEY : ALIBABA_API_KEY;
         
         const requestBody = {
             model: QWEN_MODEL,
@@ -228,17 +201,25 @@ async function callQwenAPI(prompt, data) {
             stream: false
         };
         
-        // Add web search for text verification
+        // Add web search for text verification using extra_body
         if (data.type === 'text') {
-            requestBody.enable_search = true;
+            requestBody.extra_body = {
+                enable_search: true,
+                search_options: {
+                    search_strategy: 'agent'
+                }
+            };
         }
+        
+        console.log(`Calling Qwen API with ${useGameKey ? 'GAME' : 'TRUTH DETECTOR'} key`);
+        console.log('Request body:', JSON.stringify(requestBody, null, 2));
         
         const response = await axios.post(
             `${QWEN_BASE_URL}/chat/completions`,
             requestBody,
             {
                 headers: {
-                    'Authorization': `Bearer ${ALIBABA_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 }
             }
@@ -251,6 +232,9 @@ async function callQwenAPI(prompt, data) {
         return parseAIResponse(responseText, data);
     } catch (error) {
         console.error('Qwen API Error:', error.response?.data || error.message);
+        if (error.response?.data) {
+            console.error('Error details:', JSON.stringify(error.response.data, null, 2));
+        }
         throw error;
     }
 }
@@ -414,7 +398,7 @@ function generateVerificationPrompt(data) {
     // TruthChain PH Fact Checker Prompt with Bias Detection
     return {
         systemPrompt: `You are TruthChain PH, an AI fact-checker for Filipino users.
-Your task: analyze news, social media posts, screenshots, videos, quotes, rumors, and claims, and classify them as:
+Your task: analyze news, social media posts, quotes, rumors, and claims, and classify them as:
 
 TRUE | FALSE | MISLEADING | NEEDS CONTEXT | UNVERIFIED
 
@@ -435,7 +419,7 @@ Rules and Process:
 
 3. Analysis
    - Look for:
-     • Fake or edited images
+     • Fake or misleading quotes
      • AI-generated quotes
      • Misquotes
    - Assess if information is outdated or partially true.
@@ -534,24 +518,7 @@ function generateMockAIResponse(data) {
                 summary: 'Fake news about government policy'
             }
         },
-        image: {
-            status: 'FAKE',
-            confidenceScore: 85,
-            explanation: 'Ang larawang ito ay manipulated. Nakita namin ang signs ng photo editing at may inconsistencies sa metadata.',
-            whyFake: 'Fake dahil: (1) May visible signs ng photoshop, (2) Ang metadata ay edited, (3) Ang context ng image ay mali, (4) Hindi ito original source.',
-            sources: [
-                { title: 'Reverse Image Search Results', url: 'https://google.com/imghp' }
-            ],
-            summary: 'Manipulated image spreading misinformation'
-        },
-        video: {
-            status: 'UNVERIFIED',
-            confidenceScore: 65,
-            explanation: 'Hindi pa namin ma-verify completely ang video na ito. May some questionable elements pero walang definitive proof na fake.',
-            whyFake: null,
-            sources: [],
-            summary: 'Video requiring further investigation'
-        }
+        // Only text verification is supported now
     };
     
     // Randomly select verified or fake for text
@@ -564,167 +531,255 @@ function generateMockAIResponse(data) {
 }
 
 // ==========================================
-// GOVGUIDE VIDEO GENERATION ENDPOINT
+// FACT OR FAKE GAME - CLAIM GENERATOR
 // ==========================================
-app.post('/api/generate-video', async (req, res) => {
+app.post('/api/game-claim', async (req, res) => {
     try {
-        const { processId, language, detailLevel, voiceStyle } = req.body;
+        const { round } = req.body;
         
-        // Validate input
-        if (!processId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Process ID is required'
-            });
-        }
+        // Generate AI claim using the game host prompt
+        const claim = await generateGameClaim(round || 1);
         
-        // Create generation request
-        const request = new VideoGenerationRequest({
-            processId,
-            language: language || 'tagalog',
-            detailLevel: detailLevel || 'detailed',
-            voiceStyle: voiceStyle || 'friendly'
-        });
-        
-        // Generate video with AI (stub)
-        const videoResult = await generateVideoWithAI(request);
-        
-        // Create generated video record
-        const video = new GeneratedVideo({
-            requestId: request.id,
-            processId: request.processId,
-            ...videoResult,
-            language: request.language
-        });
-        
-        // Store video
-        dataStore.videos.push(video);
-        dataStore.stats.videoCount++;
-        
-        // Return result
         res.json({
             success: true,
-            result: video
+            claim: claim
         });
         
     } catch (error) {
-        console.error('Video generation error:', error);
+        console.error('Game claim generation error:', error);
         res.status(500).json({
             success: false,
-            message: error.message || 'Video generation failed'
+            message: error.message || 'Failed to generate claim'
         });
     }
 });
 
 // ==========================================
-// LAYER 5: AI VIDEO GENERATION LOGIC (STUB)
+// AI DEBATE - PROS AND CONS ANALYSIS
 // ==========================================
-async function generateVideoWithAI(request) {
-    // STUB: Replace with actual Alibaba Cloud Video Generation API
-    
-    console.log('AI Video Generation started for:', request.processId);
-    
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Generate AI prompt for video content
-    const prompt = generateVideoPrompt(request);
-    console.log('AI Video Prompt:', prompt);
-    
-    // STUB: Simulated AI video generation
-    // In production: const videoData = await callAlibabaVideoGenAI(prompt);
-    const videoData = generateMockVideo(request);
-    
-    return videoData;
-}
-
-function generateVideoPrompt(request) {
-    // LAYER 5: AI Prompt for Video Generation
-    
-    const processDetails = {
-        'passport': 'Philippine Passport Application Process',
-        'drivers-license': "LTO Driver's License Application",
-        'nbi-clearance': 'NBI Clearance Application',
-        'bir-registration': 'BIR Registration for Self-Employed',
-        'sss-registration': 'SSS Membership Registration',
-        'philhealth': 'PhilHealth Registration',
-        'pagibig': 'Pag-IBIG Membership Registration',
-        'business-permit': 'Business Permit Application'
-    };
-    
-    return {
-        systemPrompt: `You are a Filipino government process expert AI. Your role is to create comprehensive, step-by-step video guides for government processes.
-Generate clear, accurate, and helpful content in ${request.language} with a ${request.voiceStyle} tone.
-Focus on practical steps, required documents, fees, and helpful tips.`,
+app.post('/api/debate', async (req, res) => {
+    try {
+        const { content } = req.body;
         
-        userPrompt: `Create a ${request.detailLevel} video guide for: ${processDetails[request.processId]}
+        // Validate input
+        if (!content) {
+            return res.status(400).json({
+                success: false,
+                message: 'Content is required for debate analysis'
+            });
+        }
+        
+        // Analyze content with AI to generate pros and cons
+        const debateAnalysis = await analyzeDebateWithAI(content);
+        
+        res.json({
+            success: true,
+            analysis: debateAnalysis
+        });
+        
+    } catch (error) {
+        console.error('Debate analysis error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to analyze content'
+        });
+    }
+});
 
-Generate:
-1. Video script in ${request.language}
-2. Step-by-step process breakdown
-3. Required documents list
-4. Estimated fees
-5. Processing time
-6. Helpful tips and reminders
-7. Visual suggestions for each step
+async function analyzeDebateWithAI(content) {
+    const systemPrompt = `You are TruthChain PH, a Filipino-friendly AI debate facilitator.
+Your task is to analyze any article, claim, or statement and provide a balanced debate with pros and cons.
 
-Voice style: ${request.voiceStyle}
-Language: ${request.language}
-Detail level: ${request.detailLevel}`
-    };
+Instructions:
+1. Extract the main claim from the provided content
+2. Present 3-5 strong, well-reasoned arguments for BOTH sides (pros and cons)
+3. Provide a neutral summary that helps users understand multiple perspectives
+4. Use simple Taglish or English
+5. Always fact-check your arguments before presenting them
+6. Include credible sources to support your arguments
+7. IMPORTANT: Use web search to verify facts and include actual source URLs from your search
+
+Output format (JSON):
+{
+  "claim": "<main claim from the article>",
+  "pros": ["Pro argument 1", "Pro argument 2", "..."],
+  "cons": ["Con argument 1", "Con argument 2", "..."],
+  "summary": "<neutral summary or insight>",
+  "sources": ["https://credible-source-1.com", "https://credible-source-2.com"]
 }
 
-function generateMockVideo(request) {
-    // STUB: Mock video generation
-    // Replace with actual video generation and upload to Alibaba OSS
+Ensure each argument is:
+- Specific and well-reasoned
+- Based on facts, not opinions
+- Supported by credible sources
+- Clearly explained`;
+
+    const userPrompt = `Analyze the following content and provide a balanced debate with pros and cons:
+
+${content}
+
+Provide your analysis in the specified JSON format.`;
     
-    const processSteps = {
-        'passport': [
-            'Mag-register online sa DFA appointment system',
-            'Piliin ang processing type (new, renewal)',
-            'Pumili ng appointment date at location',
-            'Bayaran ang application fee (P950 regular, P1,200 expedited)',
-            'Pumunta sa DFA office sa appointment date',
-            'Dalhin ang required documents: Birth Certificate (PSA), Valid ID, Appointment confirmation',
-            'Mag-picture at biometrics',
-            'Hintayin ang release date (10-12 working days regular, 6 working days expedited)'
-        ],
-        'drivers-license': [
-            'Kumuha ng medical certificate',
-            'Pumunta sa LTO licensing center',
-            'Submit requirements at fill up application form',
-            'Magbayad ng fees (Student Permit + Non-Pro: P585)',
-            'Mag-take ng written exam',
-            'Mag-take ng practical driving exam',
-            'Kunin ang driver\'s license'
-        ],
-        'nbi-clearance': [
-            'Mag-register online sa nbi-clearance.com',
-            'Fill up application form',
-            'Piliin ang NBI branch at schedule',
-            'Bayaran ang fee online (P155)',
-            'Pumunta sa NBI branch',
-            'Dalhin ang valid ID at reference number',
-            'Mag-picture at fingerprint',
-            'Kunin ang clearance (same day kung walang hit)'
-        ]
-    };
+    try {
+        const axios = require('axios');
+        
+        // Use the main API key for debate analysis
+        const apiKey = ALIBABA_API_KEY;
+        
+        const requestBody = {
+            model: QWEN_MODEL,
+            messages: [
+                {
+                    role: 'system',
+                    content: systemPrompt
+                },
+                {
+                    role: 'user',
+                    content: userPrompt
+                }
+            ],
+            temperature: 0.3,
+            max_tokens: 2048,
+            stream: false,
+            extra_body: {
+                enable_search: true,
+                search_options: {
+                    search_strategy: 'agent'
+                }
+            }
+        };
+        
+        console.log('Calling Qwen API for debate analysis with TRUTH DETECTOR key');
+        console.log('Request body:', JSON.stringify(requestBody, null, 2));
+        
+        const response = await axios.post(
+            `${QWEN_BASE_URL}/chat/completions`,
+            requestBody,
+            {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        const responseText = response.data.choices[0].message.content;
+        console.log('Qwen API Response:', responseText);
+        
+        // Parse the AI response directly since it should return JSON
+        let analysis;
+        
+        // Try to parse the response text as JSON
+        try {
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                analysis = JSON.parse(jsonMatch[0]);
+            } else {
+                analysis = JSON.parse(responseText);
+            }
+        } catch (parseError) {
+            console.error('Failed to parse JSON response:', parseError);
+            throw new Error('Invalid response format from AI');
+        }
+        
+        // Ensure we have all required fields
+        const result = {
+            claim: analysis.claim || 'Main claim not identified',
+            pros: Array.isArray(analysis.pros) ? analysis.pros : [],
+            cons: Array.isArray(analysis.cons) ? analysis.cons : [],
+            summary: analysis.summary || 'No summary provided',
+            sources: Array.isArray(analysis.sources) ? analysis.sources : []
+        };
+        
+        console.log('Generated debate analysis with sources:', result);
+        return result;
+    } catch (error) {
+        console.error('AI Debate Analysis Error:', error);
+        throw error;
+    }
+}
+
+async function generateGameClaim(round) {
+    const systemPrompt = `You are TruthChain PH, a Filipino-friendly AI fact-checker game host. 
+Your task is to run a fun "True or False" game. 
+
+Rules:
+- Present a statement or claim to the player.
+- Player guesses TRUE or FALSE.
+- After the guess, reveal if it is correct.
+- Provide 1-2 short bullet points explaining why it is TRUE or FALSE.
+- Keep the tone casual, friendly, and simple.
+- Always fact-check your statements before saying they are true or false.
+- Use simple Taglish or English.
+- IMPORTANT: Use web search to verify facts and include actual source URLs from your search.
+- Include 2-3 credible sources from the internet that support your answer.
+
+Output format (JSON):
+{
+  "statement": "<the claim>",
+  "answer": "TRUE" or "FALSE",
+  "explanation": [
+     "• Bullet point 1",
+     "• Bullet point 2"
+  ],
+  "sources": ["https://actual-url-1.com", "https://actual-url-2.com"]
+}`;
+
+    const userPrompt = `Let's play a "True or False" game. 
+Give me 1 statement about current events, news, or general knowledge for me to guess. 
+Use web search to verify the facts and provide actual source URLs.
+Provide the statement in JSON format as specified.`;
     
-    const steps = processSteps[request.processId] || [
-        'Register at government office',
-        'Submit required documents',
-        'Pay processing fees',
-        'Wait for processing',
-        'Claim your document'
-    ];
-    
-    return {
-        title: `How to: ${request.processId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`,
-        videoUrl: `/videos/${request.id}.mp4`, // Stub URL
-        duration: '5:30',
-        steps: steps,
-        transcript: `Kamusta, Pilipino! Sa video na ito, tutulungan natin kayo sa proseso ng ${request.processId}...`
-    };
+    try {
+        const response = await callQwenAPI(
+            { systemPrompt, userPrompt },
+            { type: 'text' },
+            true  // Use game API key
+        );
+        
+        // Try to parse the response
+        let claim;
+        if (response.rawResponse) {
+            // Extract sources from rawResponse or response
+            let sources = [];
+            if (response.rawResponse.sources && Array.isArray(response.rawResponse.sources)) {
+                sources = response.rawResponse.sources;
+            } else if (response.sources && Array.isArray(response.sources)) {
+                sources = response.sources.map(s => s.url || s);
+            }
+            
+            claim = {
+                statement: response.rawResponse.statement || response.summary,
+                answer: response.rawResponse.answer || 'TRUE',
+                explanation: response.rawResponse.explanation || [response.explanation],
+                sources: sources
+            };
+        } else {
+            // Fallback parsing - extract sources from response text
+            let sources = [];
+            if (response.sources && Array.isArray(response.sources)) {
+                sources = response.sources.map(s => s.url || s);
+            } else {
+                // Extract URLs from the explanation text
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const urls = (response.explanation || '').match(urlRegex) || [];
+                sources = urls.map(url => url.replace(/[)\]>}]+$/, ''));
+            }
+            
+            claim = {
+                statement: response.summary || response.explanation,
+                answer: response.status === 'VERIFIED' ? 'TRUE' : 'FALSE',
+                explanation: [response.explanation],
+                sources: sources
+            };
+        }
+        
+        console.log('Generated claim with sources:', claim);
+        return claim;
+    } catch (error) {
+        console.error('AI Claim Generation Error:', error);
+        throw error;
+    }
 }
 
 // ==========================================
