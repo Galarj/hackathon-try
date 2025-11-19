@@ -21,95 +21,6 @@ const API_BASE_URL = 'http://localhost:3000/api';
 // ==========================================
 // GAME DESIGN GENERATOR
 // ==========================================
-async function generateGameDesign() {
-    try {
-        // Show loading
-        showLoading('Generating...', 'AI is creating a new game design. Please wait...');
-        
-        const response = await fetch(`${API_BASE_URL}/generate-game-design`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                gameName: 'Fact or Fake?',
-                designType: 'complete'
-            })
-        });
-        
-        const data = await response.json();
-        
-        hideLoading();
-        
-        if (data.success) {
-            displayGeneratedDesign(data.result);
-        } else {
-            showError('Generation Failed', data.message || 'Unable to generate game design');
-        }
-    } catch (error) {
-        hideLoading();
-        console.error('Game design generation error:', error);
-        showError('Generation Failed', 'Unable to generate game design. Please try again.');
-    }
-}
-
-function displayGeneratedDesign(result) {
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="margin: 0;"><i class="fas fa-magic"></i> Generated Game Design</h2>
-                <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--medium-gray);">×</button>
-            </div>
-            <p style="color: var(--medium-gray); margin-bottom: 1.5rem;">
-                <strong>Game:</strong> ${result.gameName} | <strong>Type:</strong> ${result.designType}
-            </p>
-            <div style="background: #f8f9fa; padding: 2rem; border-radius: 8px; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; font-size: 0.95rem; line-height: 1.8; max-height: 60vh; overflow-y: auto;">
-                ${result.content}
-            </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button class="btn btn-primary" onclick="copyDesignToClipboard(\`${result.content.replace(/`/g, '\\`').replace(/\\/g, '\\\\').replace(/\$/g, '\\$')}\`)">
-                    <i class="fas fa-copy"></i> Copy to Clipboard
-                </button>
-                <button class="btn btn-outline" onclick="this.closest('.modal').remove()">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-function copyDesignToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showSuccess('Copied!', 'Design copied to clipboard successfully');
-    }).catch(err => {
-        console.error('Copy failed:', err);
-        showError('Copy Failed', 'Unable to copy to clipboard');
-    });
-}
-
-function showLoading(title, message) {
-    const loading = document.createElement('div');
-    loading.id = 'globalLoading';
-    loading.className = 'modal active';
-    loading.innerHTML = `
-        <div class="modal-content" style="text-align: center; max-width: 400px;">
-            <div class="spinner" style="margin: 2rem auto;"></div>
-            <h3>${title}</h3>
-            <p style="color: var(--medium-gray);">${message}</p>
-        </div>
-    `;
-    document.body.appendChild(loading);
-}
-
-function hideLoading() {
-    const loading = document.getElementById('globalLoading');
-    if (loading) {
-        loading.remove();
-    }
-}
 
 // ==========================================
 // INITIALIZATION
@@ -211,8 +122,6 @@ async function updateStats() {
         
         if (data.success) {
             document.getElementById('verifiedCount').textContent = formatNumber(data.stats.verifiedCount);
-            document.getElementById('videoCount').textContent = formatNumber(data.stats.videoCount);
-            document.getElementById('userCount').textContent = formatNumber(data.stats.userCount);
         }
     } catch (error) {
         console.error('Error updating stats:', error);
@@ -265,15 +174,15 @@ function renderDemoActivity() {
         },
         {
             status: 'fake',
-            title: 'Fake News: Misleading image about government policy',
+            title: 'Fake News: Misleading claim about government policy',
             timestamp: '15 minutes ago',
-            type: 'image'
+            type: 'text'
         },
         {
             status: 'verified',
-            title: 'Generated: Passport Renewal Guide Video',
+            title: 'Verified: New public transportation routes announced',
             timestamp: '1 hour ago',
-            type: 'video'
+            type: 'text'
         }
     ];
     
@@ -306,6 +215,7 @@ function createActivityItem(activity) {
 
 // Input Method Selection
 function selectInputMethod(method) {
+    // Only text verification is supported now
     // Update buttons
     document.querySelectorAll('.method-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -316,7 +226,7 @@ function selectInputMethod(method) {
     document.querySelectorAll('.input-container').forEach(container => {
         container.classList.remove('active');
     });
-    document.getElementById(`${method}Input`).classList.add('active');
+    document.getElementById('textInput').classList.add('active');
     
     appState.currentInputMethod = method;
     
@@ -326,136 +236,42 @@ function selectInputMethod(method) {
 
 // File Upload Handling
 function setupDragAndDrop() {
-    const imageZone = document.getElementById('imageUploadZone');
-    const videoZone = document.getElementById('videoUploadZone');
-    
-    [imageZone, videoZone].forEach(zone => {
-        zone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'var(--primary-blue)';
-            zone.style.backgroundColor = 'var(--light-gray)';
-        });
-        
-        zone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'var(--border-gray)';
-            zone.style.backgroundColor = 'transparent';
-        });
-        
-        zone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            zone.style.borderColor = 'var(--border-gray)';
-            zone.style.backgroundColor = 'transparent';
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                const type = zone.id === 'imageUploadZone' ? 'image' : 'video';
-                handleFileSelection(files[0], type);
-            }
-        });
-    });
+    // Only text verification is supported now
 }
 
 function handleFileUpload(type) {
-    const fileInput = document.getElementById(`${type}File`);
-    const file = fileInput.files[0];
-    
-    if (file) {
-        handleFileSelection(file, type);
-    }
+    // Only text verification is supported now
 }
 
 function handleFileSelection(file, type) {
-    // Validate file
-    const validation = validateFile(file, type);
-    if (!validation.valid) {
-        showError('Invalid File', validation.message);
-        return;
-    }
-    
-    // Store file
-    appState.uploadedFile = file;
-    
-    // Show preview
-    showFilePreview(file, type);
-    
-    // Show verify button
-    document.getElementById(`verify${type.charAt(0).toUpperCase() + type.slice(1)}Btn`).style.display = 'block';
+    // Only text verification is supported now
 }
 
 function validateFile(file, type) {
-    const maxSizes = {
-        image: 10 * 1024 * 1024, // 10MB
-        video: 50 * 1024 * 1024  // 50MB
-    };
-    
-    const allowedTypes = {
-        image: ['image/jpeg', 'image/jpg', 'image/png'],
-        video: ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime']
-    };
-    
-    if (file.size > maxSizes[type]) {
-        return {
-            valid: false,
-            message: `File size exceeds ${type === 'image' ? '10MB' : '50MB'} limit`
-        };
-    }
-    
-    if (!allowedTypes[type].includes(file.type)) {
-        return {
-            valid: false,
-            message: `Invalid file type. Please upload a valid ${type} file.`
-        };
-    }
-    
-    return { valid: true };
+    // Only text verification is supported now
+    return { valid: false, message: 'Only text verification is supported' };
 }
 
 function showFilePreview(file, type) {
-    const preview = document.getElementById(`${type}Preview`);
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-        if (type === 'image') {
-            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-        } else {
-            preview.innerHTML = `<video src="${e.target.result}" controls></video>`;
-        }
-    };
-    
-    reader.readAsDataURL(file);
+    // Only text verification is supported now
 }
 
 // News Verification
 async function verifyNews(type) {
-    let contentData;
+    // Only text verification is supported
+    const newsText = document.getElementById('newsText').value.trim();
+    const sourceUrl = document.getElementById('sourceUrl').value.trim();
     
-    // Gather content based on type
-    if (type === 'text') {
-        const newsText = document.getElementById('newsText').value.trim();
-        const sourceUrl = document.getElementById('sourceUrl').value.trim();
-        
-        if (!newsText) {
-            showError('Missing Content', 'Please enter the news text to verify.');
-            return;
-        }
-        
-        contentData = {
-            type: 'text',
-            content: newsText,
-            sourceUrl: sourceUrl || null
-        };
-    } else {
-        if (!appState.uploadedFile) {
-            showError('Missing File', `Please upload a ${type} file to verify.`);
-            return;
-        }
-        
-        contentData = {
-            type: type,
-            file: appState.uploadedFile
-        };
+    if (!newsText) {
+        showError('Missing Content', 'Please enter the news text to verify.');
+        return;
     }
+    
+    const contentData = {
+        type: 'text',
+        content: newsText,
+        sourceUrl: sourceUrl || null
+    };
     
     // Show loading state
     showVerificationLoading();
@@ -480,46 +296,26 @@ async function verifyNews(type) {
 }
 
 async function callVerificationAPI(contentData) {
-    // For text verification, send JSON
-    if (contentData.type === 'text') {
-        const response = await fetch(`${API_BASE_URL}/verify`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: contentData.type,
-                content: contentData.content,
-                sourceUrl: contentData.sourceUrl || null
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Verification failed');
-        }
-        
-        return data.result;
-    } else {
-        // For image/video, use FormData (not currently supported)
-        const formData = new FormData();
-        formData.append('type', contentData.type);
-        formData.append('file', contentData.file);
-        
-        const response = await fetch(`${API_BASE_URL}/verify`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Verification failed');
-        }
-        
-        return data.result;
+    // Only text verification is supported
+    const response = await fetch(`${API_BASE_URL}/verify`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            type: contentData.type,
+            content: contentData.content,
+            sourceUrl: contentData.sourceUrl || null
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Verification failed');
     }
+    
+    return data.result;
 }
 
 function showVerificationLoading() {
@@ -624,305 +420,15 @@ function addToRecentActivity(result) {
     }
 }
 
-// ==========================================
-// GOVGUIDE AI VIDEO GENERATOR
-// ==========================================
+// Only text verification is supported now
 
-const processData = {
-    'passport': {
-        title: 'Passport Application',
-        icon: 'fa-passport',
-        description: 'Step-by-step guide para sa pag-apply ng Philippine Passport',
-        duration: '5-7 minutes',
-        difficulty: 'Medium'
-    },
-    'drivers-license': {
-        title: "Driver's License",
-        icon: 'fa-id-card',
-        description: 'Guide sa pagkuha ng driver\'s license sa LTO',
-        duration: '6-8 minutes',
-        difficulty: 'Medium'
-    },
-    'nbi-clearance': {
-        title: 'NBI Clearance',
-        icon: 'fa-file-alt',
-        description: 'Paano kumuha ng NBI Clearance online at walk-in',
-        duration: '4-5 minutes',
-        difficulty: 'Easy'
-    },
-    'bir-registration': {
-        title: 'BIR Registration',
-        icon: 'fa-file-invoice',
-        description: 'Guide sa pag-register sa BIR para sa self-employed',
-        duration: '7-10 minutes',
-        difficulty: 'Hard'
-    },
-    'sss-registration': {
-        title: 'SSS Registration',
-        icon: 'fa-id-badge',
-        description: 'Step-by-step SSS registration guide',
-        duration: '5-6 minutes',
-        difficulty: 'Easy'
-    },
-    'philhealth': {
-        title: 'PhilHealth Registration',
-        icon: 'fa-heartbeat',
-        description: 'Paano mag-register sa PhilHealth',
-        duration: '4-5 minutes',
-        difficulty: 'Easy'
-    },
-    'pagibig': {
-        title: 'Pag-IBIG Registration',
-        icon: 'fa-home',
-        description: 'Guide sa Pag-IBIG membership registration',
-        duration: '4-5 minutes',
-        difficulty: 'Easy'
-    },
-    'business-permit': {
-        title: 'Business Permit',
-        icon: 'fa-briefcase',
-        description: 'Paano kumuha ng Business Permit sa LGU',
-        duration: '8-10 minutes',
-        difficulty: 'Hard'
-    }
-};
+// Only text verification is supported now
 
-function selectProcess(processId) {
-    // Update selected state
-    document.querySelectorAll('.process-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    event.target.closest('.process-card').classList.add('selected');
-    
-    appState.selectedProcess = processId;
-    
-    // Show process details
-    showProcessDetails(processId);
-    
-    // Show video options
-    showVideoOptions(processId);
-}
+// Only text verification is supported now
 
-function showProcessDetails(processId) {
-    const details = document.getElementById('processDetails');
-    const process = processData[processId];
-    
-    details.innerHTML = `
-        <h3><i class="fas ${process.icon}"></i> ${process.title}</h3>
-        <p>${process.description}</p>
-        <div class="process-info">
-            <div class="info-item">
-                <i class="fas fa-clock"></i>
-                <div>
-                    <strong>Duration:</strong> ${process.duration}
-                </div>
-            </div>
-            <div class="info-item">
-                <i class="fas fa-signal"></i>
-                <div>
-                    <strong>Difficulty:</strong> ${process.difficulty}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    details.classList.add('active');
-}
+// Only text verification is supported now
 
-function showVideoOptions(processId) {
-    const options = document.getElementById('videoOptions');
-    
-    options.innerHTML = `
-        <h3>Video Generation Options:</h3>
-        
-        <div class="option-group">
-            <label for="language">Wika / Language:</label>
-            <select id="language">
-                <option value="tagalog">Tagalog</option>
-                <option value="taglish">Taglish</option>
-                <option value="english">English</option>
-            </select>
-        </div>
-        
-        <div class="option-group">
-            <label for="detailLevel">Detail Level:</label>
-            <select id="detailLevel">
-                <option value="basic">Basic - Quick overview</option>
-                <option value="detailed" selected>Detailed - Step-by-step</option>
-                <option value="comprehensive">Comprehensive - Full guide</option>
-            </select>
-        </div>
-        
-        <div class="option-group">
-            <label for="voiceStyle">Voice Style:</label>
-            <select id="voiceStyle">
-                <option value="friendly" selected>Friendly & Casual</option>
-                <option value="professional">Professional</option>
-                <option value="enthusiastic">Enthusiastic</option>
-            </select>
-        </div>
-        
-        <button class="btn btn-primary btn-large" onclick="generateVideo()">
-            <i class="fas fa-magic"></i> Generate Video
-        </button>
-    `;
-    
-    options.classList.add('active');
-}
-
-async function generateVideo() {
-    if (!appState.selectedProcess) {
-        showError('No Process Selected', 'Please select a government process first.');
-        return;
-    }
-    
-    const options = {
-        processId: appState.selectedProcess,
-        language: document.getElementById('language').value,
-        detailLevel: document.getElementById('detailLevel').value,
-        voiceStyle: document.getElementById('voiceStyle').value
-    };
-    
-    // Show loading state
-    showVideoLoading();
-    
-    try {
-        // Call video generation API
-        const result = await callVideoGenerationAPI(options);
-        
-        // Hide loading
-        hideVideoLoading();
-        
-        // Show video player
-        showVideoPlayer(result);
-        
-        // Add to recent activity
-        addVideoToRecentActivity(result);
-        
-        // Show success message
-        showSuccess('Video Generated!', 'Ang iyong GovGuide video ay handa na!');
-        
-    } catch (error) {
-        hideVideoLoading();
-        showError('Generation Failed', error.message || 'Unable to generate video. Please try again.');
-    }
-}
-
-async function callVideoGenerationAPI(options) {
-    const response = await fetch(`${API_BASE_URL}/generate-video`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(options)
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Video generation failed');
-    }
-    
-    return data.result;
-}
-
-function showVideoLoading() {
-    const loading = document.getElementById('videoLoading');
-    loading.classList.add('active');
-    
-    // Simulate progress
-    let progress = 0;
-    const progressBar = document.getElementById('videoProgress');
-    
-    const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressBar.style.width = `${progress}%`;
-    }, 500);
-    
-    // Store interval for cleanup
-    loading.dataset.interval = interval;
-}
-
-function hideVideoLoading() {
-    const loading = document.getElementById('videoLoading');
-    clearInterval(loading.dataset.interval);
-    loading.classList.remove('active');
-    document.getElementById('videoProgress').style.width = '0%';
-}
-
-function showVideoPlayer(result) {
-    const player = document.getElementById('videoPlayer');
-    appState.generatedVideo = result;
-    
-    player.innerHTML = `
-        <h3>Generated Video: ${processData[appState.selectedProcess].title}</h3>
-        <div class="video-wrapper">
-            <video controls autoplay>
-                <source src="${result.videoUrl}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-        
-        <div class="video-info">
-            <h3>Video Steps:</h3>
-            <ul class="video-steps">
-                ${result.steps.map(step => `<li>${step}</li>`).join('')}
-            </ul>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button class="btn btn-primary" onclick="downloadVideo()">
-                <i class="fas fa-download"></i> Download Video
-            </button>
-            <button class="btn btn-outline" onclick="shareVideo()">
-                <i class="fas fa-share-alt"></i> Share
-            </button>
-        </div>
-    `;
-    
-    player.classList.add('active');
-}
-
-function downloadVideo() {
-    if (!appState.generatedVideo) return;
-    
-    const link = document.createElement('a');
-    link.href = appState.generatedVideo.videoUrl;
-    link.download = `govguide-${appState.selectedProcess}.mp4`;
-    link.click();
-    
-    showSuccess('Download Started', 'Your video is being downloaded.');
-}
-
-function shareVideo() {
-    if (!appState.generatedVideo) return;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: `GovGuide: ${processData[appState.selectedProcess].title}`,
-            text: 'Check out this helpful government process guide!',
-            url: appState.generatedVideo.videoUrl
-        }).catch(err => console.error('Share failed:', err));
-    } else {
-        // Fallback - copy link
-        navigator.clipboard.writeText(appState.generatedVideo.videoUrl);
-        showSuccess('Link Copied', 'Video link copied to clipboard!');
-    }
-}
-
-function addVideoToRecentActivity(result) {
-    const activity = {
-        status: 'verified',
-        title: `Generated: ${processData[appState.selectedProcess].title} Guide`,
-        timestamp: 'Just now',
-        type: 'video'
-    };
-    
-    const activityList = document.getElementById('recentActivityList');
-    const item = createActivityItem(activity);
-    activityList.insertBefore(item, activityList.firstChild);
-}
+// Only text verification is supported now
 
 // ==========================================
 // FACT OR FAKE GAME
@@ -1101,6 +607,137 @@ function quitGame() {
     if (gameState.score > 0) {
         showSuccess('Game Over', `Final Score: ${gameState.score} points!`);
     }
+}
+
+// ==========================================
+// AI DEBATE FUNCTIONS
+// ==========================================
+
+async function analyzeDebate() {
+    const content = document.getElementById('debateContent').value.trim();
+    
+    // Validate input
+    if (!content) {
+        showError('Input Error', 'Please enter an article, claim, or statement to debate.');
+        return;
+    }
+    
+    // Show loading state
+    document.getElementById('debateLoading').style.display = 'block';
+    document.getElementById('debateResults').style.display = 'none';
+    
+    try {
+        // Call the API
+        const response = await fetch(`${API_BASE_URL}/debate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to analyze content');
+        }
+        
+        // Display results
+        displayDebateResults(data.analysis);
+        
+    } catch (error) {
+        console.error('Debate analysis error:', error);
+        showError('Analysis Error', error.message || 'Failed to analyze the content. Please try again.');
+    } finally {
+        // Hide loading state
+        document.getElementById('debateLoading').style.display = 'none';
+    }
+}
+
+function displayDebateResults(analysis) {
+    const resultsContainer = document.getElementById('debateResults');
+    
+    // Create HTML for the results
+    let html = `
+        <div class="debate-claim">
+            <h3>Main Claim:</h3>
+            <p class="claim-text">${escapeHtml(analysis.claim)}</p>
+        </div>
+        
+        <div class="debate-sections">
+            <div class="pros-section">
+                <h3><i class="fas fa-thumbs-up"></i> Pros (Arguments For)</h3>
+                <ul class="argument-list">
+    `;
+    
+    // Add pros
+    if (analysis.pros && analysis.pros.length > 0) {
+        analysis.pros.forEach(pro => {
+            html += `<li>${escapeHtml(pro)}</li>`;
+        });
+    } else {
+        html += `<li>No pros provided</li>`;
+    }
+    
+    html += `
+                </ul>
+            </div>
+            
+            <div class="cons-section">
+                <h3><i class="fas fa-thumbs-down"></i> Cons (Arguments Against)</h3>
+                <ul class="argument-list">
+    `;
+    
+    // Add cons
+    if (analysis.cons && analysis.cons.length > 0) {
+        analysis.cons.forEach(con => {
+            html += `<li>${escapeHtml(con)}</li>`;
+        });
+    } else {
+        html += `<li>No cons provided</li>`;
+    }
+    
+    html += `
+                </ul>
+            </div>
+        </div>
+        
+        <div class="debate-summary">
+            <h3><i class="fas fa-balance-scale"></i> Balanced Summary</h3>
+            <p>${escapeHtml(analysis.summary)}</p>
+        </div>
+    `;
+    
+    // Add sources if available
+    if (analysis.sources && analysis.sources.length > 0) {
+        html += `
+            <div class="debate-sources">
+                <h3><i class="fas fa-link"></i> Sources</h3>
+                <ul class="sources-list">
+        `;
+        
+        analysis.sources.forEach(source => {
+            const url = typeof source === 'string' ? source : source.url || '';
+            const title = typeof source === 'string' ? source : source.title || url;
+            if (url) {
+                html += `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a></li>`;
+            }
+        });
+        
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    resultsContainer.innerHTML = html;
+    resultsContainer.style.display = 'block';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ==========================================
