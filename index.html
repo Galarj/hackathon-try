@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthChain PH - Totoo ba o Fake?</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Onboarding Modal (First-time users) -->
+    <div id="onboardingModal" class="modal">
+        <div class="modal-content onboarding">
+            <div class="onboarding-step active" data-step="1">
+                <div class="onboarding-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h2>Maligayang pagdating sa TruthChain PH!</h2>
+                <p>Ang iyong AI-powered companion para sa totoo at totoong impormasyon</p>
+                <button class="btn btn-primary" onclick="nextOnboardingStep()">Simulan</button>
+            </div>
+            
+            <div class="onboarding-step" data-step="2">
+                <div class="onboarding-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h2>Fake News Detector</h2>
+                <p>I-upload ang text, larawan, o video para i-verify kung totoo o fake ang balita</p>
+                <div class="onboarding-actions">
+                    <button class="btn btn-secondary" onclick="prevOnboardingStep()">Bumalik</button>
+                    <button class="btn btn-primary" onclick="nextOnboardingStep()">Susunod</button>
+                </div>
+            </div>
+            
+            <div class="onboarding-step" data-step="3">
+                <div class="onboarding-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h2>GovGuide AI</h2>
+                <p>Makakuha ng step-by-step video guide para sa mga government processes</p>
+                <div class="onboarding-actions">
+                    <button class="btn btn-secondary" onclick="prevOnboardingStep()">Bumalik</button>
+                    <button class="btn btn-primary" onclick="completeOnboarding()">Simulan na!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-link"></i>
+                <span>TruthChain PH</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#home" class="nav-link active" onclick="showSection('home')">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#fake-news" class="nav-link" onclick="showSection('fake-news')">
+                    <i class="fas fa-search"></i>
+                    <span>Fake News Detector</span>
+                </a>
+                <a href="#govguide" class="nav-link" onclick="showSection('govguide')">
+                    <i class="fas fa-video"></i>
+                    <span>GovGuide AI</span>
+                </a>
+            </div>
+            <div class="nav-mobile-toggle" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav" id="mobileNav">
+        <a href="#home" onclick="showSection('home'); toggleMobileMenu()">
+            <i class="fas fa-home"></i> Home
+        </a>
+        <a href="#fake-news" onclick="showSection('fake-news'); toggleMobileMenu()">
+            <i class="fas fa-search"></i> Fake News Detector
+        </a>
+        <a href="#govguide" onclick="showSection('govguide'); toggleMobileMenu()">
+            <i class="fas fa-video"></i> GovGuide AI
+        </a>
+    </div>
+
+    <!-- Home Dashboard -->
+    <section id="home" class="section active">
+        <div class="container">
+            <div class="hero">
+                <h1>Kamusta, Pilipino! 👋</h1>
+                <p class="hero-subtitle">Handa na ba kayong malaman ang totoo?</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-value" id="verifiedCount">1,247</div>
+                        <div class="stat-label">Na-verify na balita</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-video"></i></div>
+                        <div class="stat-value" id="videoCount">523</div>
+                        <div class="stat-label">GovGuide videos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-value" id="userCount">12,458</div>
+                        <div class="stat-label">Active users</div>
+                    </div>
+                </div>
+
+                <div class="action-cards">
+                    <div class="action-card" onclick="showSection('fake-news')">
+                        <div class="action-icon fake-news-bg">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>I-verify ang Balita</h3>
+                        <p>Upload ng text, image, o video para i-check kung totoo</p>
+                        <button class="btn btn-outline">Simulan →</button>
+                    </div>
+                    
+                    <div class="action-card" onclick="showSection('govguide')">
+                        <div class="action-icon govguide-bg">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3>GovGuide AI</h3>
+                        <p>Manood ng AI-generated explainer videos para sa gov processes</p>
+                        <button class="btn btn-outline">Simulan →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h2>Kamakailang Verification</h2>
+                <div id="recentActivityList" class="activity-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fake News Detector Section -->
+    <section id="fake-news" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-search"></i> Fake News Detector</h1>
+                <p>I-upload ang text, larawan, o video para malaman kung totoo o fake</p>
+            </div>
+
+            <div class="verification-container">
+                <!-- Input Methods -->
+                <div class="input-method-selector">
+                    <button class="method-btn active" data-method="text" onclick="selectInputMethod('text')">
+                        <i class="fas fa-font"></i>
+                        <span>Text</span>
+                    </button>
+                    <button class="method-btn" data-method="image" onclick="selectInputMethod('image')">
+                        <i class="fas fa-image"></i>
+                        <span>Larawan</span>
+                    </button>
+                    <button class="method-btn" data-method="video" onclick="selectInputMethod('video')">
+                        <i class="fas fa-video"></i>
+                        <span>Video</span>
+                    </button>
+                </div>
+
+                <!-- Text Input -->
+                <div id="textInput" class="input-container active">
+                    <textarea 
+                        id="newsText" 
+                        placeholder="Paste mo dito ang balita o headline na gusto mong i-verify..."
+                        rows="6"></textarea>
+                    <input 
+                        type="url" 
+                        id="sourceUrl" 
+                        placeholder="Source URL (optional)"
+                        class="source-input">
+                    <button class="btn btn-primary btn-large" onclick="verifyNews('text')">
+                        <i class="fas fa-search"></i> I-verify ang Balita
+                    </button>
+                </div>
+
+                <!-- Image Input -->
+                <div id="imageInput" class="input-container">
+                    <div class="upload-zone" id="imageUploadZone" onclick="document.getElementById('imageFile').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click o i-drag ang larawan dito</p>
+                        <small>PNG, JPG, JPEG (max 10MB)</small>
+                    </div>
+                    <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="handleFileUpload('image')">
+                    <div id="imagePreview" class="file-preview"></div>
+                    <button class="btn btn-primary btn-large" id="verifyImageBtn" style="display: none;" onclick="verifyNews('image')">
+                        <i class="fas fa-search"></i> I-verify ang Larawan
+                    </button>
+                </div>
+
+                <!-- Video Input -->
+                <div id="videoInput" class="input-container">
+                    <div class="upload-zone" id="videoUploadZone" onclick="document.getElementById('videoFile').click()">
+                        <i class="fas fa-video"></i>
+                        <p>Click o i-drag ang video dito</p>
+                        <small>MP4, AVI, MOV (max 50MB)</small>
+                    </div>
+                    <input type="file" id="videoFile" accept="video/*" style="display: none;" onchange="handleFileUpload('video')">
+                    <div id="videoPreview" class="file-preview"></div>
+                    <button class="btn btn-primary btn-large" id="verifyVideoBtn" style="display: none;" onclick="verifyNews('video')">
+                        <i class="fas fa-search"></i> I-verify ang Video
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="verificationLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p>Ini-verify ang content...</p>
+                <small>Sandali lang, sinusuri ng AI...</small>
+            </div>
+
+            <!-- Results -->
+            <div id="verificationResults" class="results-container">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- GovGuide AI Section -->
+    <section id="govguide" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-video"></i> GovGuide AI Video Generator</h1>
+                <p>Makakuha ng AI-generated step-by-step video guide para sa government processes</p>
+            </div>
+
+            <div class="govguide-container">
+                <!-- Process Selection -->
+                <div class="process-selector">
+                    <h3>Piliin ang Government Process:</h3>
+                    <div class="process-grid">
+                        <div class="process-card" onclick="selectProcess('passport')">
+                            <i class="fas fa-passport"></i>
+                            <span>Passport Application</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('drivers-license')">
+                            <i class="fas fa-id-card"></i>
+                            <span>Driver's License</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('nbi-clearance')">
+                            <i class="fas fa-file-alt"></i>
+                            <span>NBI Clearance</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('bir-registration')">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>BIR Registration</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('sss-registration')">
+                            <i class="fas fa-id-badge"></i>
+                            <span>SSS Registration</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('philhealth')">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>PhilHealth</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('pagibig')">
+                            <i class="fas fa-home"></i>
+                            <span>Pag-IBIG</span>
+                        </div>
+                        <div class="process-card" onclick="selectProcess('business-permit')">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Business Permit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Process Details -->
+                <div id="processDetails" class="process-details">
+                    <!-- Populated when process is selected -->
+                </div>
+
+                <!-- Video Generation Options -->
+                <div id="videoOptions" class="video-options">
+                    <!-- Populated when process is selected -->
+                </div>
+
+                <!-- Loading State -->
+                <div id="videoLoading" class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Ginagawa ang video...</p>
+                    <small>Sandali lang, ginagawa ng AI ang explainer video...</small>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="videoProgress"></div>
+                    </div>
+                </div>
+
+                <!-- Video Player -->
+                <div id="videoPlayer" class="video-player-container">
+                    <!-- Populated with generated video -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error-modal">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="errorTitle">Error</h3>
+            <p id="errorMessage"></p>
+            <button class="btn btn-primary" onclick="closeErrorModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 id="successTitle">Success!</h3>
+            <p id="successMessage"></p>
+            <button class="btn btn-primary" onclick="closeSuccessModal()">OK</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

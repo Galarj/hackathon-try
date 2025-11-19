@@ -1,0 +1,564 @@
+{
+  "description": "LAYER 4: DATA MODELS & STORAGE - Complete JSON Schemas for TruthChain PH",
+  
+  "models": {
+    "VerificationSubmission": {
+      "description": "User submission for news verification (text/image/video)",
+      "schema": {
+        "submissionId": {
+          "type": "string",
+          "description": "Unique submission identifier",
+          "example": "SUB-1700000000000-abc123xyz"
+        },
+        "userId": {
+          "type": "string",
+          "description": "User identifier (optional for anonymous submissions)",
+          "example": "USER-12345"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "image", "video"],
+          "description": "Type of content being verified"
+        },
+        "content": {
+          "type": "string",
+          "description": "Text content (for text type)",
+          "example": "Breaking news: Government announces new policy..."
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL to uploaded file (for image/video type)",
+          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/uploads/image-123.jpg"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "Original filename",
+          "example": "news-screenshot.jpg"
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "File size in bytes",
+          "example": 2048576
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type of uploaded file",
+          "example": "image/jpeg"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "description": "Source URL of the news (optional)",
+          "example": "https://example.com/news/article-123"
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of submission",
+          "example": "2025-11-19T10:30:00.000Z"
+        },
+        "ipAddress": {
+          "type": "string",
+          "description": "Submitter IP address (for abuse prevention)",
+          "example": "203.177.98.123"
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Browser user agent",
+          "example": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+        }
+      }
+    },
+    
+    "VerificationResult": {
+      "description": "AI verification result with confidence score and explanation",
+      "schema": {
+        "resultId": {
+          "type": "string",
+          "description": "Unique result identifier",
+          "example": "VER-1700000000000-abc123xyz"
+        },
+        "submissionId": {
+          "type": "string",
+          "description": "Reference to original submission",
+          "example": "SUB-1700000000000-abc123xyz"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["VERIFIED", "FAKE", "UNVERIFIED", "PROCESSING", "ERROR"],
+          "description": "Verification status"
+        },
+        "confidenceScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "AI confidence score (0-100)",
+          "example": 87.5
+        },
+        "explanation": {
+          "type": "string",
+          "description": "Human-readable explanation in Filipino/Taglish",
+          "example": "Ang balitang ito ay totoo at napatunayan sa mga kredibleng sources..."
+        },
+        "whyFake": {
+          "type": "string",
+          "description": "Detailed explanation if status is FAKE",
+          "example": "Fake dahil: (1) Walang official statement, (2) Hindi published sa legitimate outlets..."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief summary of the content verified",
+          "example": "Government policy announcement regarding education reform"
+        },
+        "sources": {
+          "type": "array",
+          "description": "List of credible sources supporting the verdict",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Official Government Press Release"
+              },
+              "url": {
+                "type": "string",
+                "example": "https://pcoo.gov.ph/press-releases/2024/pr-123"
+              },
+              "publishDate": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-11-18T14:00:00.000Z"
+              },
+              "credibilityScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "example": 95
+              }
+            }
+          }
+        },
+        "aiModel": {
+          "type": "string",
+          "description": "AI model used for verification",
+          "example": "Alibaba Qwen-2.5-72B"
+        },
+        "processingTime": {
+          "type": "number",
+          "description": "Processing time in milliseconds",
+          "example": 2345
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional metadata from AI analysis",
+          "properties": {
+            "language": {
+              "type": "string",
+              "example": "tagalog"
+            },
+            "sentiment": {
+              "type": "string",
+              "enum": ["positive", "negative", "neutral"],
+              "example": "neutral"
+            },
+            "topics": {
+              "type": "array",
+              "items": { "type": "string" },
+              "example": ["education", "government", "policy"]
+            },
+            "entities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string" },
+                  "confidence": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "verifiedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when verification completed",
+          "example": "2025-11-19T10:31:23.456Z"
+        }
+      }
+    },
+    
+    "VideoGenerationRequest": {
+      "description": "Request to generate government process explainer video",
+      "schema": {
+        "requestId": {
+          "type": "string",
+          "description": "Unique request identifier",
+          "example": "VID-1700000000000-abc123xyz"
+        },
+        "userId": {
+          "type": "string",
+          "description": "User identifier (optional)",
+          "example": "USER-12345"
+        },
+        "processId": {
+          "type": "string",
+          "enum": [
+            "passport",
+            "drivers-license",
+            "nbi-clearance",
+            "bir-registration",
+            "sss-registration",
+            "philhealth",
+            "pagibig",
+            "business-permit"
+          ],
+          "description": "Government process type"
+        },
+        "processName": {
+          "type": "string",
+          "description": "Human-readable process name",
+          "example": "Passport Application"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["tagalog", "taglish", "english"],
+          "description": "Video language preference",
+          "default": "tagalog"
+        },
+        "detailLevel": {
+          "type": "string",
+          "enum": ["basic", "detailed", "comprehensive"],
+          "description": "Level of detail in the video",
+          "default": "detailed"
+        },
+        "voiceStyle": {
+          "type": "string",
+          "enum": ["friendly", "professional", "enthusiastic"],
+          "description": "AI voice style preference",
+          "default": "friendly"
+        },
+        "customization": {
+          "type": "object",
+          "description": "Optional customization parameters",
+          "properties": {
+            "includeSubtitles": {
+              "type": "boolean",
+              "default": true
+            },
+            "videoQuality": {
+              "type": "string",
+              "enum": ["720p", "1080p"],
+              "default": "1080p"
+            },
+            "backgroundMusic": {
+              "type": "boolean",
+              "default": true
+            },
+            "accentColor": {
+              "type": "string",
+              "example": "#0038a8"
+            }
+          }
+        },
+        "requestedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of request",
+          "example": "2025-11-19T10:35:00.000Z"
+        }
+      }
+    },
+    
+    "GeneratedVideo": {
+      "description": "Generated government guide video with metadata",
+      "schema": {
+        "videoId": {
+          "type": "string",
+          "description": "Unique video identifier",
+          "example": "VID-1700000000000-abc123xyz"
+        },
+        "requestId": {
+          "type": "string",
+          "description": "Reference to generation request",
+          "example": "VID-1700000000000-abc123xyz"
+        },
+        "processId": {
+          "type": "string",
+          "description": "Government process identifier",
+          "example": "passport"
+        },
+        "title": {
+          "type": "string",
+          "description": "Video title",
+          "example": "Step-by-Step Guide: Philippine Passport Application"
+        },
+        "description": {
+          "type": "string",
+          "description": "Video description",
+          "example": "Kompletong gabay sa pag-apply ng Philippine Passport..."
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "URL to video file (Alibaba OSS)",
+          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/videos/passport-guide-123.mp4"
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "URL to video thumbnail",
+          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/thumbnails/passport-guide-123.jpg"
+        },
+        "duration": {
+          "type": "string",
+          "description": "Video duration in MM:SS format",
+          "example": "05:30"
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "Duration in seconds",
+          "example": 330
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "Video file size in bytes",
+          "example": 52428800
+        },
+        "resolution": {
+          "type": "string",
+          "description": "Video resolution",
+          "example": "1920x1080"
+        },
+        "language": {
+          "type": "string",
+          "description": "Video language",
+          "example": "tagalog"
+        },
+        "steps": {
+          "type": "array",
+          "description": "Step-by-step process breakdown",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stepNumber": { "type": "number", "example": 1 },
+              "title": { "type": "string", "example": "Mag-register online" },
+              "description": { "type": "string", "example": "Pumunta sa DFA appointment system..." },
+              "timestamp": { "type": "string", "example": "00:45" },
+              "estimatedTime": { "type": "string", "example": "10-15 minutes" },
+              "requiredDocuments": {
+                "type": "array",
+                "items": { "type": "string" },
+                "example": ["Valid ID", "Birth Certificate"]
+              },
+              "fees": {
+                "type": "object",
+                "properties": {
+                  "amount": { "type": "number", "example": 950 },
+                  "currency": { "type": "string", "example": "PHP" },
+                  "description": { "type": "string", "example": "Regular processing" }
+                }
+              },
+              "tips": {
+                "type": "array",
+                "items": { "type": "string" },
+                "example": ["Mag-book ng appointment ng maaga"]
+              }
+            }
+          }
+        },
+        "transcript": {
+          "type": "string",
+          "description": "Full video transcript",
+          "example": "Kamusta, Pilipino! Sa video na ito, tutulungan natin kayo sa pag-apply ng Philippine Passport..."
+        },
+        "subtitlesUrl": {
+          "type": "string",
+          "description": "URL to SRT subtitle file",
+          "example": "https://oss-ap-southeast-1.aliyuncs.com/truthchain/subtitles/passport-guide-123.srt"
+        },
+        "aiModel": {
+          "type": "string",
+          "description": "AI model used for generation",
+          "example": "Alibaba Qwen-2.5 + VideoGen"
+        },
+        "generationTime": {
+          "type": "number",
+          "description": "Generation time in milliseconds",
+          "example": 45678
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when video was generated",
+          "example": "2025-11-19T10:36:30.000Z"
+        },
+        "views": {
+          "type": "number",
+          "description": "Number of views",
+          "default": 0
+        },
+        "likes": {
+          "type": "number",
+          "description": "Number of likes",
+          "default": 0
+        },
+        "shares": {
+          "type": "number",
+          "description": "Number of shares",
+          "default": 0
+        }
+      }
+    },
+    
+    "UserActivity": {
+      "description": "User activity tracking for recent verifications and videos",
+      "schema": {
+        "activityId": {
+          "type": "string",
+          "example": "ACT-1700000000000-abc123xyz"
+        },
+        "userId": {
+          "type": "string",
+          "example": "USER-12345"
+        },
+        "activityType": {
+          "type": "string",
+          "enum": ["verification", "video_generation", "video_view", "share"],
+          "example": "verification"
+        },
+        "referenceId": {
+          "type": "string",
+          "description": "ID of related verification or video",
+          "example": "VER-1700000000000-abc123xyz"
+        },
+        "status": {
+          "type": "string",
+          "description": "Activity status or result",
+          "example": "verified"
+        },
+        "title": {
+          "type": "string",
+          "description": "Activity title for display",
+          "example": "Verified: Government announces new policy"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-11-19T10:30:00.000Z"
+        }
+      }
+    },
+    
+    "ApplicationStats": {
+      "description": "Application-wide statistics",
+      "schema": {
+        "verifiedCount": {
+          "type": "number",
+          "description": "Total number of verifications performed",
+          "example": 1247
+        },
+        "fakeNewsDetected": {
+          "type": "number",
+          "description": "Total fake news detected",
+          "example": 523
+        },
+        "videoCount": {
+          "type": "number",
+          "description": "Total videos generated",
+          "example": 523
+        },
+        "userCount": {
+          "type": "number",
+          "description": "Total active users",
+          "example": 12458
+        },
+        "averageConfidenceScore": {
+          "type": "number",
+          "description": "Average AI confidence score",
+          "example": 84.7
+        },
+        "mostVerifiedTopics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "topic": { "type": "string" },
+              "count": { "type": "number" }
+            }
+          }
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-11-19T10:40:00.000Z"
+        }
+      }
+    }
+  },
+  
+  "apiEndpoints": {
+    "description": "API endpoint specifications with input/output schemas",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/verify",
+        "description": "Submit content for fake news verification",
+        "requestBody": {
+          "contentType": "multipart/form-data",
+          "schema": {
+            "type": {
+              "type": "string",
+              "required": true,
+              "enum": ["text", "image", "video"]
+            },
+            "content": {
+              "type": "string",
+              "required": "conditional (if type=text)"
+            },
+            "file": {
+              "type": "file",
+              "required": "conditional (if type=image or video)"
+            },
+            "sourceUrl": {
+              "type": "string",
+              "required": false
+            }
+          }
+        },
+        "response": {
+          "success": true,
+          "result": "VerificationResult"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/generate-video",
+        "description": "Generate government process explainer video",
+        "requestBody": {
+          "contentType": "application/json",
+          "schema": "VideoGenerationRequest"
+        },
+        "response": {
+          "success": true,
+          "result": "GeneratedVideo"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/stats",
+        "description": "Get application statistics",
+        "response": {
+          "success": true,
+          "stats": "ApplicationStats"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/recent-activity",
+        "description": "Get recent user activity",
+        "response": {
+          "success": true,
+          "activities": "Array<UserActivity>"
+        }
+      }
+    ]
+  }
+}
