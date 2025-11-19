@@ -19,6 +19,99 @@ const appState = {
 const API_BASE_URL = 'http://localhost:3000/api';
 
 // ==========================================
+// GAME DESIGN GENERATOR
+// ==========================================
+async function generateGameDesign() {
+    try {
+        // Show loading
+        showLoading('Generating...', 'AI is creating a new game design. Please wait...');
+        
+        const response = await fetch(`${API_BASE_URL}/generate-game-design`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                gameName: 'Fact or Fake?',
+                designType: 'complete'
+            })
+        });
+        
+        const data = await response.json();
+        
+        hideLoading();
+        
+        if (data.success) {
+            displayGeneratedDesign(data.result);
+        } else {
+            showError('Generation Failed', data.message || 'Unable to generate game design');
+        }
+    } catch (error) {
+        hideLoading();
+        console.error('Game design generation error:', error);
+        showError('Generation Failed', 'Unable to generate game design. Please try again.');
+    }
+}
+
+function displayGeneratedDesign(result) {
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;"><i class="fas fa-magic"></i> Generated Game Design</h2>
+                <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--medium-gray);">×</button>
+            </div>
+            <p style="color: var(--medium-gray); margin-bottom: 1.5rem;">
+                <strong>Game:</strong> ${result.gameName} | <strong>Type:</strong> ${result.designType}
+            </p>
+            <div style="background: #f8f9fa; padding: 2rem; border-radius: 8px; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; font-size: 0.95rem; line-height: 1.8; max-height: 60vh; overflow-y: auto;">
+                ${result.content}
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-primary" onclick="copyDesignToClipboard(\`${result.content.replace(/`/g, '\\`').replace(/\\/g, '\\\\').replace(/\$/g, '\\$')}\`)">
+                    <i class="fas fa-copy"></i> Copy to Clipboard
+                </button>
+                <button class="btn btn-outline" onclick="this.closest('.modal').remove()">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function copyDesignToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccess('Copied!', 'Design copied to clipboard successfully');
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        showError('Copy Failed', 'Unable to copy to clipboard');
+    });
+}
+
+function showLoading(title, message) {
+    const loading = document.createElement('div');
+    loading.id = 'globalLoading';
+    loading.className = 'modal active';
+    loading.innerHTML = `
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <div class="spinner" style="margin: 2rem auto;"></div>
+            <h3>${title}</h3>
+            <p style="color: var(--medium-gray);">${message}</p>
+        </div>
+    `;
+    document.body.appendChild(loading);
+}
+
+function hideLoading() {
+    const loading = document.getElementById('globalLoading');
+    if (loading) {
+        loading.remove();
+    }
+}
+
+// ==========================================
 // INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -387,30 +480,46 @@ async function verifyNews(type) {
 }
 
 async function callVerificationAPI(contentData) {
-    const formData = new FormData();
-    formData.append('type', contentData.type);
-    
+    // For text verification, send JSON
     if (contentData.type === 'text') {
-        formData.append('content', contentData.content);
-        if (contentData.sourceUrl) {
-            formData.append('sourceUrl', contentData.sourceUrl);
+        const response = await fetch(`${API_BASE_URL}/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: contentData.type,
+                content: contentData.content,
+                sourceUrl: contentData.sourceUrl || null
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Verification failed');
         }
+        
+        return data.result;
     } else {
+        // For image/video, use FormData (not currently supported)
+        const formData = new FormData();
+        formData.append('type', contentData.type);
         formData.append('file', contentData.file);
+        
+        const response = await fetch(`${API_BASE_URL}/verify`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Verification failed');
+        }
+        
+        return data.result;
     }
-    
-    const response = await fetch(`${API_BASE_URL}/verify`, {
-        method: 'POST',
-        body: formData
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Verification failed');
-    }
-    
-    return data.result;
 }
 
 function showVerificationLoading() {

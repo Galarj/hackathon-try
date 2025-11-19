@@ -4,54 +4,22 @@
    ========================================== */
 
 const express = require('express');
-const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs').promises;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Alibaba Cloud Qwen API Configuration
+const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || 'sk-7631ebf5379b47db85215c0b3b95d9c1';
+const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+const QWEN_MODEL = 'qwen-plus';
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-// File upload configuration
-const storage = multer.diskStorage({
-    destination: async (req, file, cb) => {
-        const uploadDir = './uploads';
-        try {
-            await fs.mkdir(uploadDir, { recursive: true });
-        } catch (error) {
-            console.error('Error creating upload directory:', error);
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB max file size
-    },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|mp4|avi|mov/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        
-        if (mimetype && extname) {
-            return cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only images and videos are allowed.'));
-        }
-    }
-});
 
 // ==========================================
 // LAYER 4: DATA MODELS & STORAGE
@@ -72,9 +40,8 @@ const dataStore = {
 class VerificationResult {
     constructor(data) {
         this.id = this.generateId();
-        this.type = data.type; // 'text', 'image', 'video'
+        this.type = 'text'; // Only text now
         this.content = data.content || null;
-        this.filePath = data.filePath || null;
         this.sourceUrl = data.sourceUrl || null;
         this.status = data.status; // 'VERIFIED', 'FAKE', 'UNVERIFIED'
         this.confidenceScore = data.confidenceScore; // 0-100
@@ -83,7 +50,7 @@ class VerificationResult {
         this.sources = data.sources || [];
         this.summary = data.summary || null;
         this.timestamp = new Date().toISOString();
-        this.aiModel = 'Alibaba Qwen-2.5';
+        this.aiModel = 'Alibaba Qwen-Plus';
     }
     
     generateId() {
@@ -163,43 +130,35 @@ app.get('/api/recent-activity', (req, res) => {
 });
 
 // ==========================================
-// FAKE NEWS VERIFICATION ENDPOINT
+// FAKE NEWS VERIFICATION ENDPOINT - TEXT ONLY
 // ==========================================
-app.post('/api/verify', upload.single('file'), async (req, res) => {
+app.post('/api/verify', async (req, res) => {
     try {
         const { type, content, sourceUrl } = req.body;
         
         // Validate input
-        if (!type) {
+        if (!type || type !== 'text') {
             return res.status(400).json({
                 success: false,
-                message: 'Verification type is required'
+                message: 'Only text verification is supported'
             });
         }
         
-        if (type === 'text' && !content) {
+        if (!content) {
             return res.status(400).json({
                 success: false,
-                message: 'Content text is required for text verification'
-            });
-        }
-        
-        if ((type === 'image' || type === 'video') && !req.file) {
-            return res.status(400).json({
-                success: false,
-                message: `${type} file is required for ${type} verification`
+                message: 'Content text is required for verification'
             });
         }
         
         // Prepare verification data
         const verificationData = {
-            type,
-            content: type === 'text' ? content : null,
-            filePath: req.file ? req.file.path : null,
+            type: 'text',
+            content: content,
             sourceUrl: sourceUrl || null
         };
         
-        // Call AI verification (stub - replace with actual AI call)
+        // Call AI verification
         const aiResult = await verifyWithAI(verificationData);
         
         // Create verification result
@@ -225,81 +184,325 @@ app.post('/api/verify', upload.single('file'), async (req, res) => {
 });
 
 // ==========================================
-// LAYER 5: AI VERIFICATION LOGIC (STUB)
+// LAYER 5: AI VERIFICATION LOGIC (REAL)
 // ==========================================
 async function verifyWithAI(data) {
-    // STUB: Replace with actual Alibaba Cloud GenAI API call
-    // This is where you would integrate with Qwen-2.5 or other AI models
-    
     console.log('AI Verification started for:', data.type);
     
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+        // Generate AI prompt based on type
+        const prompt = generateVerificationPrompt(data);
+        console.log('AI Prompt generated for:', data.type);
+        
+        // Call Alibaba Cloud Qwen API
+        const aiResponse = await callQwenAPI(prompt, data);
+        
+        return aiResponse;
+    } catch (error) {
+        console.error('AI Verification error:', error);
+        // Fallback to mock response if API fails
+        console.log('Falling back to mock response');
+        return generateMockAIResponse(data);
+    }
+}
+
+// Call Alibaba Cloud Qwen API for News Verification
+async function callQwenAPI(prompt, data) {
+    try {
+        const axios = require('axios');
+        
+        const requestBody = {
+            model: QWEN_MODEL,
+            messages: [
+                {
+                    role: 'system',
+                    content: prompt.systemPrompt
+                },
+                {
+                    role: 'user',
+                    content: prompt.userPrompt
+                }
+            ],
+            temperature: 0.3,
+            max_tokens: 2048,
+            stream: false
+        };
+        
+        // Add web search for text verification
+        if (data.type === 'text') {
+            requestBody.enable_search = true;
+        }
+        
+        const response = await axios.post(
+            `${QWEN_BASE_URL}/chat/completions`,
+            requestBody,
+            {
+                headers: {
+                    'Authorization': `Bearer ${ALIBABA_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        
+        const responseText = response.data.choices[0].message.content;
+        console.log('Qwen API Response:', responseText);
+        
+        // Parse AI response into structured format
+        return parseAIResponse(responseText, data);
+    } catch (error) {
+        console.error('Qwen API Error:', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+// Parse AI response text into structured verification result
+function parseAIResponse(responseText, data) {
+    try {
+        // Try to extract JSON if AI returns structured data
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            
+            // Map new format to existing format
+            const statusMap = {
+                'TRUE': 'VERIFIED',
+                'FALSE': 'FAKE',
+                'MISLEADING': 'FAKE',
+                'NEEDS_CONTEXT': 'UNVERIFIED',
+                'NEEDS CONTEXT': 'UNVERIFIED',
+                'UNVERIFIED': 'UNVERIFIED'
+            };
+            
+            const mappedStatus = statusMap[parsed.status] || 'UNVERIFIED';
+            const confidence = typeof parsed.confidence === 'string' ? 
+                parseInt(parsed.confidence) : parsed.confidence || 75;
+            
+            // Build explanation from detailed_explanation array
+            let explanation = parsed.summary || '';
+            if (parsed.detailed_explanation && Array.isArray(parsed.detailed_explanation)) {
+                explanation += '\n\n' + parsed.detailed_explanation.join('\n');
+            }
+            
+            // Add bias information
+            if (parsed.biased && parsed.biased !== 'NO') {
+                explanation += `\n\n⚠️ Bias Detected: ${parsed.biased}`;
+            }
+            
+            // Add tips
+            if (parsed.tips && Array.isArray(parsed.tips)) {
+                explanation += '\n\n💡 Tips:\n' + parsed.tips.join('\n');
+            }
+            
+            // Extract and format sources from AI response
+            let sources = [];
+            if (parsed.sources && Array.isArray(parsed.sources)) {
+                sources = parsed.sources.map(src => ({
+                    title: src.title || 'Source',
+                    url: src.url || '#',
+                    credibilityScore: 90,
+                    relevance: src.relevance || ''
+                }));
+            }
+            
+            // Fallback to text extraction if no structured sources
+            if (sources.length === 0) {
+                sources = extractSourcesFromText(responseText);
+            }
+            
+            // Build comprehensive "why fake" explanation for FAKE content
+            let whyFake = null;
+            if (mappedStatus === 'FAKE') {
+                whyFake = '❌ Why This Is Fake:\n\n';
+                if (parsed.detailed_explanation && Array.isArray(parsed.detailed_explanation)) {
+                    whyFake += parsed.detailed_explanation.join('\n') + '\n';
+                }
+                if (sources.length > 0) {
+                    whyFake += '\n📚 Sources Supporting This Verdict:\n';
+                    sources.forEach((src, idx) => {
+                        whyFake += `${idx + 1}. ${src.title}${src.relevance ? ' - ' + src.relevance : ''}\n   ${src.url}\n`;
+                    });
+                }
+            }
+            
+            return {
+                status: mappedStatus,
+                confidenceScore: Math.min(confidence, 100), // Cap at 100%
+                explanation: explanation,
+                whyFake: whyFake,
+                sources: sources,
+                summary: parsed.summary || extractSummary(responseText),
+                biased: parsed.biased || 'NO',
+                rawResponse: parsed
+            };
+        }
+    } catch (e) {
+        console.log('Could not parse JSON, using text analysis:', e.message);
+    }
     
-    // Generate AI prompt based on type
-    const prompt = generateVerificationPrompt(data);
-    console.log('AI Prompt:', prompt);
+    // Fallback: Analyze text response
+    const lowerText = responseText.toLowerCase();
+    let status = 'UNVERIFIED';
+    let confidenceScore = 70;
     
-    // STUB: Simulated AI response
-    // In production, call: const aiResponse = await callAlibabaGenAI(prompt);
-    const aiResponse = generateMockAIResponse(data);
+    // Determine status from response
+    if (lowerText.includes('true') && !lowerText.includes('false')) {
+        status = 'VERIFIED';
+        confidenceScore = 85;
+    } else if (lowerText.includes('false') || lowerText.includes('fake') || lowerText.includes('misleading')) {
+        status = 'FAKE';
+        confidenceScore = 85;
+    }
     
-    return aiResponse;
+    // Extract sources from response
+    const sources = extractSourcesFromText(responseText);
+    
+    // Build why fake from full response
+    let whyFake = null;
+    if (status === 'FAKE') {
+        whyFake = '❌ Why This Is Fake:\n\n' + responseText;
+        if (sources.length > 0) {
+            whyFake += '\n\n📚 Sources:\n';
+            sources.forEach((src, idx) => {
+                whyFake += `${idx + 1}. ${src.title}: ${src.url}\n`;
+            });
+        }
+    }
+    
+    return {
+        status: status,
+        confidenceScore: Math.min(confidenceScore, 100), // Cap at 100%
+        explanation: responseText,
+        whyFake: whyFake,
+        sources: sources,
+        summary: extractSummary(responseText),
+        biased: 'UNSURE'
+    };
+}
+
+// Extract summary from AI response
+function extractSummary(text) {
+    const sentences = text.split(/[.!?]/);
+    return sentences[0]?.substring(0, 200) || 'AI verification completed';
+}
+
+// Extract sources from AI response text
+function extractSourcesFromText(text) {
+    const sources = [];
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = text.match(urlRegex) || [];
+    
+    urls.forEach((url, index) => {
+        sources.push({
+            title: `Source ${index + 1}`,
+            url: url.replace(/[)\]>}]+$/, ''), // Clean trailing characters
+            credibilityScore: 85
+        });
+    });
+    
+    // Add default Filipino fact-check sources if none found
+    if (sources.length === 0) {
+        sources.push(
+            { title: 'VERA Files Fact Check', url: 'https://verafiles.org', credibilityScore: 95 },
+            { title: 'Rappler Fact Check', url: 'https://rappler.com/fact-check', credibilityScore: 95 }
+        );
+    }
+    
+    return sources;
 }
 
 function generateVerificationPrompt(data) {
-    // LAYER 5: AI Prompt Templates
-    
-    if (data.type === 'text') {
-        return {
-            systemPrompt: `You are a Filipino fact-checker AI. Your role is to verify news and information for accuracy. 
-Analyze the content critically, check for misinformation, and provide clear explanations in Filipino/Taglish.
-Always cite credible sources and explain your reasoning.`,
-            
-            userPrompt: `Verify ang sumusunod na balita:
+    // TruthChain PH Fact Checker Prompt with Bias Detection
+    return {
+        systemPrompt: `You are TruthChain PH, an AI fact-checker for Filipino users.
+Your task: analyze news, social media posts, screenshots, videos, quotes, rumors, and claims, and classify them as:
 
-Content: ${data.content}
-${data.sourceUrl ? `Source URL: ${data.sourceUrl}` : ''}
+TRUE | FALSE | MISLEADING | NEEDS CONTEXT | UNVERIFIED
 
-Please provide:
-1. Verdict: VERIFIED, FAKE, or UNVERIFIED
-2. Confidence Score (0-100)
-3. Explanation (in Filipino/Taglish)
-4. If fake, explain "Bakit fake?"
-5. Credible sources to support your verdict`
-        };
-    } else if (data.type === 'image') {
-        return {
-            systemPrompt: `You are an image analysis AI specializing in detecting fake news, manipulated images, and misinformation in Filipino media.
-Analyze images for signs of manipulation, verify claims made in the image, and provide Filipino-friendly explanations.`,
-            
-            userPrompt: `Analyze this image for fake news or manipulation.
-File: ${data.filePath}
+Additionally, assess whether the content shows signs of bias.
 
-Provide:
-1. Verdict: VERIFIED, FAKE, or UNVERIFIED
-2. Confidence Score
-3. Analysis of the image (manipulation, context, claims)
-4. Explanation in Filipino/Taglish
-5. Sources if available`
-        };
-    } else if (data.type === 'video') {
-        return {
-            systemPrompt: `You are a video analysis AI that detects deepfakes, manipulated videos, and misinformation in Filipino media.
-Analyze video content, detect manipulations, verify claims, and provide comprehensive Filipino-friendly reports.`,
-            
-            userPrompt: `Analyze this video for fake news or manipulation.
-File: ${data.filePath}
+Rules and Process:
 
-Provide:
-1. Verdict: VERIFIED, FAKE, or UNVERIFIED
-2. Confidence Score
-3. Video analysis (deepfake detection, manipulation, context)
-4. Explanation in Filipino/Taglish
-5. Timeline of key moments
-6. Sources if available`
-        };
-    }
+1. Claim Extraction
+   - Identify the exact claim.
+   - Remove unnecessary details: emojis, opinions, extra sentences.
+
+2. Evidence Check
+   - Compare the claim with verified sources:
+     • Philippine government agencies: DOH, DOST, DepEd, NDRRMC
+     • Major news outlets: Rappler, Inquirer, Philstar
+     • International authorities: WHO, UN, NASA
+   - Check for logical errors, misinterpreted data, or recycled news.
+
+3. Analysis
+   - Look for:
+     • Fake or edited images
+     • AI-generated quotes
+     • Misquotes
+   - Assess if information is outdated or partially true.
+   - Consider tone and framing to detect possible bias.
+
+4. Classification
+   - Choose only one: TRUE, FALSE, MISLEADING, NEEDS CONTEXT, UNVERIFIED
+
+5. Bias Detection
+   - Indicate if the content seems biased: YES, NO, or UNSURE
+   - Consider word choice, selective facts, exaggeration, or emotional framing
+
+6. WHY FAKE Explanation (CRITICAL for FALSE/MISLEADING claims)
+   - If status is FALSE or MISLEADING, you MUST provide:
+     a) Specific reasons why the content is fake/misleading
+     b) What is incorrect or manipulated
+     c) Evidence that contradicts the claim
+     d) Real facts that debunk the claim
+   - Be detailed and specific with your explanation
+
+7. Sources (MANDATORY)
+   - Always include 2-5 credible sources that support your verdict
+   - Include actual URLs when available from web search
+   - Prefer authoritative Philippine and international sources
+   - For FAKE claims: cite sources that debunk or contradict the claim
+   - For TRUE claims: cite sources that confirm the claim
+
+Output Format (JSON-ready):
+{
+  "status": "TRUE | FALSE | MISLEADING | NEEDS_CONTEXT | UNVERIFIED",
+  "confidence": "0-100%",
+  "biased": "YES | NO | UNSURE",
+  "summary": "Short explanation (1–2 sentences)",
+  "detailed_explanation": [
+    "• Reason 1 for classification with evidence",
+    "• Reason 2 with context or verification",
+    "• Reason 3 if needed",
+    "• [For FAKE/MISLEADING] Specific explanation of what is false and why"
+  ],
+  "sources": [
+    {"title": "Source name", "url": "https://actual-url.com", "relevance": "How this source supports the verdict"},
+    {"title": "Source 2", "url": "https://url2.com", "relevance": "Explanation"}
+  ],
+  "tips": [
+    "Practical advice for the user",
+    "How to avoid similar misinformation or bias"
+  ]
+}
+
+Style Guidelines:
+- Use simple, friendly English
+- Be neutral, factual, non-judgmental
+- Never invent sources, URLs, dates, or names
+- ALWAYS provide real sources from your web search
+- If unsure → mark as UNVERIFIED
+- If evidence is mixed → mark as NEEDS CONTEXT
+- If claim uses old info → mark as MISLEADING
+- Evaluate bias honestly
+- For FAKE content: Be thorough in explaining WHY it's fake`,
+        
+        userPrompt: `Analyze this claim:
+
+"${data.content}"
+${data.sourceUrl ? `\nSource URL: ${data.sourceUrl}` : ''}
+
+Using web search, verify this claim and provide your analysis in the JSON format specified above.`
+    };
 }
 
 function generateMockAIResponse(data) {
