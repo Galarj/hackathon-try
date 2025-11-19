@@ -925,6 +925,185 @@ function addVideoToRecentActivity(result) {
 }
 
 // ==========================================
+// FACT OR FAKE GAME
+// ==========================================
+
+const gameState = {
+    isPlaying: false,
+    currentRound: 0,
+    score: 0,
+    streak: 0,
+    currentClaim: null,
+    userAnswer: null
+};
+
+function showGameScreen(screenName) {
+    document.querySelectorAll('.game-screen').forEach(screen => {
+        screen.classList.remove('active');
+    });
+    document.getElementById(`game${screenName.charAt(0).toUpperCase() + screenName.slice(1)}`).classList.add('active');
+}
+
+async function startFactGame() {
+    gameState.isPlaying = true;
+    gameState.currentRound = 1;
+    gameState.score = 0;
+    gameState.streak = 0;
+    
+    updateGameStats();
+    await loadNewClaim();
+}
+
+async function loadNewClaim() {
+    showGameScreen('loading');
+    
+    try {
+        const claim = await generateAIClaim();
+        gameState.currentClaim = claim;
+        
+        // Show the claim
+        document.getElementById('claimText').textContent = claim.statement;
+        showGameScreen('play');
+    } catch (error) {
+        console.error('Error generating claim:', error);
+        let errorMessage = 'Unable to generate claim. Please try again.';
+        if (error.message) {
+            errorMessage = error.message;
+        }
+        showError('Game Error', errorMessage);
+        showGameScreen('welcome');
+    }
+}
+
+async function generateAIClaim() {
+    const response = await fetch(`${API_BASE_URL}/game-claim`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            round: gameState.currentRound
+        })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data.message || 'Failed to generate claim');
+    }
+    
+    return data.claim;
+}
+
+async function submitGameAnswer(answer) {
+    gameState.userAnswer = answer;
+    
+    // Disable buttons
+    document.querySelectorAll('.btn-game').forEach(btn => {
+        btn.disabled = true;
+    });
+    
+    // Check answer
+    const isCorrect = answer === gameState.currentClaim.answer;
+    
+    if (isCorrect) {
+        gameState.score += 100;
+        gameState.streak++;
+    } else {
+        gameState.streak = 0;
+    }
+    
+    // Show result
+    showGameResult(isCorrect);
+}
+
+function showGameResult(isCorrect) {
+    const feedbackEl = document.getElementById('resultFeedback');
+    const explanationEl = document.getElementById('resultExplanation');
+    
+    if (isCorrect) {
+        feedbackEl.innerHTML = `
+            <div class="feedback-correct">
+                <i class="fas fa-check-circle"></i>
+                <h2>Tama! Correct!</h2>
+                <p>+100 points | Streak: ${gameState.streak}</p>
+            </div>
+        `;
+    } else {
+        feedbackEl.innerHTML = `
+            <div class="feedback-wrong">
+                <i class="fas fa-times-circle"></i>
+                <h2>Mali! Wrong!</h2>
+                <p>Streak reset to 0</p>
+            </div>
+        `;
+    }
+    
+    // Show explanation with sources
+    const explanation = gameState.currentClaim.explanation;
+    let explanationHTML = `
+        <div class="explanation-content">
+            <h3><i class="fas fa-lightbulb"></i> Why is it ${gameState.currentClaim.answer}?</h3>
+            <ul class="explanation-list">
+    `;
+    
+    if (Array.isArray(explanation)) {
+        explanation.forEach(point => {
+            explanationHTML += `<li>${point}</li>`;
+        });
+    } else {
+        explanationHTML += `<li>${explanation}</li>`;
+    }
+    
+    explanationHTML += `</ul>`;
+    
+    // Add sources if available
+    if (gameState.currentClaim.sources && gameState.currentClaim.sources.length > 0) {
+        explanationHTML += `
+            <div class="game-sources">
+                <h4><i class="fas fa-link"></i> Sources:</h4>
+                <ul>
+        `;
+        gameState.currentClaim.sources.forEach(source => {
+            explanationHTML += `<li><a href="${source}" target="_blank">${source}</a></li>`;
+        });
+        explanationHTML += `</ul></div>`;
+    }
+    
+    explanationHTML += `</div>`;
+    explanationEl.innerHTML = explanationHTML;
+    
+    showGameScreen('result');
+}
+
+function nextGameRound() {
+    gameState.currentRound++;
+    updateGameStats();
+    
+    // Re-enable buttons
+    document.querySelectorAll('.btn-game').forEach(btn => {
+        btn.disabled = false;
+    });
+    
+    loadNewClaim();
+}
+
+function updateGameStats() {
+    document.getElementById('currentRound').textContent = gameState.currentRound;
+    document.getElementById('gameScore').textContent = gameState.score;
+    document.getElementById('gameStreak').textContent = gameState.streak;
+}
+
+function quitGame() {
+    gameState.isPlaying = false;
+    showGameScreen('welcome');
+    
+    if (gameState.score > 0) {
+        showSuccess('Game Over', `Final Score: ${gameState.score} points!`);
+    }
+}
+
+// ==========================================
 // MODAL FUNCTIONS
 // ==========================================
 

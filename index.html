@@ -62,6 +62,10 @@
                     <i class="fas fa-search"></i>
                     <span>Fake News Detector</span>
                 </a>
+                <a href="#fact-game" class="nav-link" onclick="showSection('fact-game')">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Fact or Fake Game</span>
+                </a>
                 <a href="#govguide" class="nav-link" onclick="showSection('govguide')">
                     <i class="fas fa-video"></i>
                     <span>GovGuide AI</span>
@@ -231,6 +235,100 @@
             <!-- Results -->
             <div id="verificationResults" class="results-container">
                 <!-- Populated by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Fact or Fake Game Section -->
+    <section id="fact-game" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h1><i class="fas fa-gamepad"></i> Fact or Fake? Game</h1>
+                <p>Test your fact-checking skills! AI-generated True or False game</p>
+            </div>
+
+            <div class="game-container">
+                <!-- Game Welcome Screen -->
+                <div id="gameWelcome" class="game-screen active">
+                    <div class="game-welcome-content">
+                        <div class="game-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <h2>Welcome to Fact or Fake!</h2>
+                        <p>Kumusta, fact-checker! Ready ka na ba?</p>
+                        <div class="game-instructions">
+                            <h3>How to Play:</h3>
+                            <ul>
+                                <li><i class="fas fa-check"></i> AI will give you a statement</li>
+                                <li><i class="fas fa-check"></i> Guess if it's TRUE or FALSE</li>
+                                <li><i class="fas fa-check"></i> Learn why it's right or wrong</li>
+                                <li><i class="fas fa-check"></i> Build your streak!</li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary btn-large" onclick="startFactGame()">
+                            <i class="fas fa-play"></i> Start Playing
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Loading Screen -->
+                <div id="gameLoading" class="game-screen">
+                    <div class="spinner"></div>
+                    <p>AI is generating a claim...</p>
+                    <small>Sandali lang...</small>
+                </div>
+
+                <!-- Game Play Screen -->
+                <div id="gamePlay" class="game-screen">
+                    <div class="game-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Round</span>
+                            <span class="stat-value" id="currentRound">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Score</span>
+                            <span class="stat-value" id="gameScore">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Streak</span>
+                            <span class="stat-value" id="gameStreak">0</span>
+                        </div>
+                    </div>
+
+                    <div class="claim-card">
+                        <div class="claim-header">Statement:</div>
+                        <div class="claim-text" id="claimText"></div>
+                    </div>
+
+                    <div class="game-buttons">
+                        <button class="btn-game btn-true" onclick="submitGameAnswer('TRUE')">
+                            <i class="fas fa-check-circle"></i>
+                            TRUE
+                        </button>
+                        <button class="btn-game btn-false" onclick="submitGameAnswer('FALSE')">
+                            <i class="fas fa-times-circle"></i>
+                            FALSE
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Result Screen -->
+                <div id="gameResult" class="game-screen">
+                    <div class="result-feedback" id="resultFeedback">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="result-explanation" id="resultExplanation">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <button class="btn btn-primary btn-large" onclick="nextGameRound()">
+                        Next Round <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn btn-outline" onclick="quitGame()">
+                        Quit Game
+                    </button>
+                </div>
             </div>
         </div>
     </section>

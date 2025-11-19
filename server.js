@@ -11,7 +11,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Alibaba Cloud Qwen API Configuration
-const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || 'sk-7631ebf5379b47db85215c0b3b95d9c1';
+const ALIBABA_API_KEY = process.env.ALIBABA_API_KEY || 'sk-7631ebf5379b47db85215c0b3b95d9c1'; // For truth detector
+const GAME_API_KEY = process.env.GAME_API_KEY || 'sk-5e8ca8408f1742f89efc5574f360afc2'; // For game
 const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL = 'qwen-plus';
 
@@ -207,9 +208,12 @@ async function verifyWithAI(data) {
 }
 
 // Call Alibaba Cloud Qwen API for News Verification
-async function callQwenAPI(prompt, data) {
+async function callQwenAPI(prompt, data, useGameKey = false) {
     try {
         const axios = require('axios');
+        
+        // Use appropriate API key based on context
+        const apiKey = useGameKey ? GAME_API_KEY : ALIBABA_API_KEY;
         
         const requestBody = {
             model: QWEN_MODEL,
@@ -228,17 +232,25 @@ async function callQwenAPI(prompt, data) {
             stream: false
         };
         
-        // Add web search for text verification
+        // Add web search for text verification using extra_body
         if (data.type === 'text') {
-            requestBody.enable_search = true;
+            requestBody.extra_body = {
+                enable_search: true,
+                search_options: {
+                    search_strategy: 'agent'
+                }
+            };
         }
+        
+        console.log(`Calling Qwen API with ${useGameKey ? 'GAME' : 'TRUTH DETECTOR'} key`);
+        console.log('Request body:', JSON.stringify(requestBody, null, 2));
         
         const response = await axios.post(
             `${QWEN_BASE_URL}/chat/completions`,
             requestBody,
             {
                 headers: {
-                    'Authorization': `Bearer ${ALIBABA_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json'
                 }
             }
@@ -251,6 +263,9 @@ async function callQwenAPI(prompt, data) {
         return parseAIResponse(responseText, data);
     } catch (error) {
         console.error('Qwen API Error:', error.response?.data || error.message);
+        if (error.response?.data) {
+            console.error('Error details:', JSON.stringify(error.response.data, null, 2));
+        }
         throw error;
     }
 }
@@ -725,6 +740,113 @@ function generateMockVideo(request) {
         steps: steps,
         transcript: `Kamusta, Pilipino! Sa video na ito, tutulungan natin kayo sa proseso ng ${request.processId}...`
     };
+}
+
+// ==========================================
+// FACT OR FAKE GAME - CLAIM GENERATOR
+// ==========================================
+app.post('/api/game-claim', async (req, res) => {
+    try {
+        const { round } = req.body;
+        
+        // Generate AI claim using the game host prompt
+        const claim = await generateGameClaim(round || 1);
+        
+        res.json({
+            success: true,
+            claim: claim
+        });
+        
+    } catch (error) {
+        console.error('Game claim generation error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to generate claim'
+        });
+    }
+});
+
+async function generateGameClaim(round) {
+    const systemPrompt = `You are TruthChain PH, a Filipino-friendly AI fact-checker game host. 
+Your task is to run a fun "True or False" game. 
+
+Rules:
+- Present a statement or claim to the player.
+- Player guesses TRUE or FALSE.
+- After the guess, reveal if it is correct.
+- Provide 1-2 short bullet points explaining why it is TRUE or FALSE.
+- Keep the tone casual, friendly, and simple.
+- Always fact-check your statements before saying they are true or false.
+- Use simple Taglish or English.
+- IMPORTANT: Use web search to verify facts and include actual source URLs from your search.
+- Include 2-3 credible sources from the internet that support your answer.
+
+Output format (JSON):
+{
+  "statement": "<the claim>",
+  "answer": "TRUE" or "FALSE",
+  "explanation": [
+     "• Bullet point 1",
+     "• Bullet point 2"
+  ],
+  "sources": ["https://actual-url-1.com", "https://actual-url-2.com"]
+}`;
+
+    const userPrompt = `Let's play a "True or False" game. 
+Give me 1 statement about current events, news, or general knowledge for me to guess. 
+Use web search to verify the facts and provide actual source URLs.
+Provide the statement in JSON format as specified.`;
+    
+    try {
+        const response = await callQwenAPI(
+            { systemPrompt, userPrompt },
+            { type: 'text' },
+            true  // Use game API key
+        );
+        
+        // Try to parse the response
+        let claim;
+        if (response.rawResponse) {
+            // Extract sources from rawResponse or response
+            let sources = [];
+            if (response.rawResponse.sources && Array.isArray(response.rawResponse.sources)) {
+                sources = response.rawResponse.sources;
+            } else if (response.sources && Array.isArray(response.sources)) {
+                sources = response.sources.map(s => s.url || s);
+            }
+            
+            claim = {
+                statement: response.rawResponse.statement || response.summary,
+                answer: response.rawResponse.answer || 'TRUE',
+                explanation: response.rawResponse.explanation || [response.explanation],
+                sources: sources
+            };
+        } else {
+            // Fallback parsing - extract sources from response text
+            let sources = [];
+            if (response.sources && Array.isArray(response.sources)) {
+                sources = response.sources.map(s => s.url || s);
+            } else {
+                // Extract URLs from the explanation text
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const urls = (response.explanation || '').match(urlRegex) || [];
+                sources = urls.map(url => url.replace(/[)\]>}]+$/, ''));
+            }
+            
+            claim = {
+                statement: response.summary || response.explanation,
+                answer: response.status === 'VERIFIED' ? 'TRUE' : 'FALSE',
+                explanation: [response.explanation],
+                sources: sources
+            };
+        }
+        
+        console.log('Generated claim with sources:', claim);
+        return claim;
+    } catch (error) {
+        console.error('AI Claim Generation Error:', error);
+        throw error;
+    }
 }
 
 // ==========================================
