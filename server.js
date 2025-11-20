@@ -18,7 +18,7 @@ const QWEN_MODEL = 'qwen-plus';
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:*', 'https://moonlit-flan-208155.netlify.app/*'],
+    origin: ['http://localhost:*', 'https://moonlit-flan-208155.netlify.app'],
     credentials: true
 }));
 app.use(express.json());
