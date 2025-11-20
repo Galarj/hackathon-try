@@ -17,7 +17,10 @@ const QWEN_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
 const QWEN_MODEL = 'qwen-plus';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:*', 'https://moonlit-flan-208155.netlify.app'],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
