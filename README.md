@@ -432,6 +432,14 @@ Complete deployment guide in **DEPLOYMENT.md** includes:
 
 MIT License - Feel free to use, modify, and distribute this project.
 
+
+
+
+
+
+NOTE: 
+THIS WORK WAS MADE BY ROLANDO ZAGALA JR FOR THE ALIBABA CLOUD AI HACKATHON
+
 ---
 
 **Built with ❤️ for the Filipino people**
